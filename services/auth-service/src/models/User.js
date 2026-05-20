@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bycrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
     {
@@ -48,15 +48,14 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-userSchema.pre("save", async function (next) {
-    if (!this.isModified('password')) return next();
+userSchema.pre("save", async function () {
+    if (!this.isModified('password')) return;
 
-    this.password = await bycrypt.hash(this.password, 12);
-    next();
+    this.password = await bcrypt.hash(this.password, 12);
 });
 
 userSchema.methods.comparePassword = async function (enteredPassword) {
-    return bycrypt.compare(enteredPassword, this.password);
+    return bcrypt.compare(enteredPassword, this.password);
 }
 
 const User = mongoose.model('User', userSchema);

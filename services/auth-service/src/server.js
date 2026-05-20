@@ -5,15 +5,16 @@ dotenv.config();
 import express from "express";
 import cors from 'cors';
 import morgan from 'morgan';
-import connectDB from "./utils/database";
+import connectDB from "./utils/database.js";
+import authRoutes from './routes/authRoutes.js'
 
-connectDB();
+// Server startup logic moved to bottom
 
 const app = express()
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3003', 'http://127.0.0.1:3003'],
     credentials: true,
 }));
 
@@ -43,8 +44,17 @@ app.use((req, res) => {
     })
 });
 
-app.listen(PORT, () => {
-    console.log(`Auth service running on http://localhost:${PORT}`)
-})
+const startServer = async () => {
+    try {
+        await connectDB();
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Auth service running on http://127.0.0.1:${PORT}`);
+        });
+    } catch (error) {
+        console.error("Failed to start server:", error);
+    }
+};
+
+startServer();
 
 export default app;
