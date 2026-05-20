@@ -2,18 +2,27 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { login } from "@/lib/api";
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setIsLoading(true);
-        // Simulate auth logic
-        setTimeout(() => {
-            setIsLoading(false);
+        setError("");
+
+        try {
+            await login(email, password);
             window.location.href = "/dashboard";
-        }, 1000);
+        } catch (err: any) {
+            setError(err.message || "An error occurred during login");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -37,8 +46,11 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                     <div className="relative z-10">
-                        <h1 className="text-2xl font-bold mb-2 text-slate-900">Welcome back</h1>
-                        <p className="text-slate-500 text-sm mb-8 font-medium">Enter your credentials to access your fleet dashboard</p>
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm mb-4 font-medium">
+                                {error}
+                            </div>
+                        )}
 
                         <form onSubmit={onSubmit} className="space-y-5">
                             <div>
@@ -46,6 +58,8 @@ export default function LoginPage() {
                                 <input
                                     required
                                     type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                     placeholder="admin@fleettracker.io"
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#088395] focus:ring-2 focus:ring-[#088395]/10 transition-all placeholder:text-slate-400 text-slate-900 font-medium"
                                 />
@@ -59,6 +73,8 @@ export default function LoginPage() {
                                 <input
                                     required
                                     type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#088395] focus:ring-2 focus:ring-[#088395]/10 transition-all placeholder:text-slate-400 text-slate-900 font-medium"
                                 />
