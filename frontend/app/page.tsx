@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { dashboardData } from './data'
+import { dashboardData } from "@/data/data";
 
 export default function Home() {
   return (
