@@ -1,3 +1,4 @@
+"use client"
 import { dashboardData, allOrders } from "@/data/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +11,38 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { statMeta, statusConfig } from "@/data/data";
+import { useEffect, useState } from "react";
+import { orderApi } from "@/lib/orderApi";
 
 export default function DashboardPage() {
+  const [analytics, setAnalytics] = useState<any>(null)
+  const [recentOrders, setRecentOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Add this useEffect inside your component
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [analyticsRes, ordersRes] = await Promise.all([
+          orderApi.getAnalytics(),
+          orderApi.getOrders('?limit=5'),
+        ])
+        if (analyticsRes.success) setAnalytics(analyticsRes.data)
+        if (ordersRes.success) setRecentOrders(ordersRes.data.orders)
+      } catch (err) {
+        console.error('Dashboard error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#088395]" />
+    </div>
+  )
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -71,14 +102,14 @@ export default function DashboardPage() {
               Recent Orders
             </CardTitle>
             <p className="text-xs text-gray-400 mt-0.5 font-medium">
-              Latest {allOrders.length} orders across all warehouses
+              Latest {recentOrders.length} orders across all warehouses
             </p>
           </div>
           <Badge
             variant="outline"
             className="text-xs text-gray-500 border-gray-200 rounded-full"
           >
-            {allOrders.length} orders
+            {recentOrders.length} orders
           </Badge>
         </CardHeader>
         <CardContent className="p-0">
@@ -103,7 +134,7 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allOrders.map((order) => {
+              {recentOrders.map((order) => {
                 const status = statusConfig[order.status] ?? {
                   label: order.status,
                   className: "bg-gray-50 text-gray-600 border-gray-200",
