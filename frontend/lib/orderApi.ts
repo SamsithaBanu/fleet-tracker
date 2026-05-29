@@ -1,11 +1,4 @@
-// frontend/lib/orderApi.ts
-
-const ORDER_API = 'http://localhost:3002'
-
-const authHeader = () => ({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-})
+import { authHeader, ORDER_API } from "@/constants/constants"
 
 export const orderApi = {
     getWarehouses: async () => {
