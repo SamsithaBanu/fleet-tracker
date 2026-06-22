@@ -58,12 +58,12 @@ export default function DriverDetailPage() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState("");
-  const [todayDelivery, setTotalDelivery] = useState([]);
+  const [todayDelivery, setTotalDelivery] = useState<Order[]>([]);
 
   const { user } = useAuth();
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchAll = async () => {  
       try {
         const [driverRes, earningsRes] = await Promise.all([
           driverApi.getOne(id),
