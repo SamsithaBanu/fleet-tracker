@@ -1,19 +1,21 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { orderApi } from "@/lib/orderApi";
+import { orderApi, wareHouseAPi } from "@/lib/orderApi";
 import { Warehouse, Package, Bike } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function WarehousePage() {
   const [warehouses, setWarehouses] = useState<any>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const getAllWarehouses = async () => {
       try {
-        const res = await orderApi.getWarehouses();
+        const res = await wareHouseAPi.getAll();
         setWarehouses(res?.data?.warehouses || []);
       } catch (error: unknown) {
         toast.error("Error fetching warehouses:", error);
@@ -46,9 +48,11 @@ export default function WarehousePage() {
       <div className="space-y-4">
         {warehouses.map((warehouse) => (
           <Card
-            key={warehouse.id}
+            key={warehouse?._id}
             className="rounded-2xl border py-2 border-gray-100 shadow-sm hover:shadow-md transition-all duration-200"
+            onClick={()=>router.push(`/dashboard/warehouses/${warehouse?._id}`)}
           >
+            {console.log('warehouse', warehouse)}
             <CardContent className="p-2">
               {/* Top Section */}
               <div className="flex items-start justify-between">

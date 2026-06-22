@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { orderApi } from "@/lib/orderApi";
+import { orderApi, wareHouseAPi } from "@/lib/orderApi";
 import toast from "react-hot-toast";
 
 interface Warehouse {
@@ -31,8 +31,22 @@ export default function CreateOrderPage() {
     notes: "",
   });
 
+  const formatPhoneNumber = (phone: string): string => {
+    // Remove all spaces, dashes, parentheses
+    let cleaned = phone.replace(/[\s\-\(\)]/g, "");
+
+    // If it doesn't start with +, add +91 (India)
+    if (!cleaned.startsWith("+")) {
+      // Remove leading 0 if present
+      cleaned = cleaned.replace(/^0/, "");
+      cleaned = `+91${cleaned}`;
+    }
+
+    return cleaned;
+  };
+
   useEffect(() => {
-    orderApi.getWarehouses().then((data) => {
+    wareHouseAPi.getAll().then((data) => {
       if (data.success) setWarehouses(data.data.warehouses);
     });
   }, []);
@@ -53,8 +67,13 @@ export default function CreateOrderPage() {
     setError("");
     setSuccess(null);
 
+    const formattedData = {
+      ...form,
+      customerPhone: formatPhoneNumber(form.customerPhone),
+    };
+
     try {
-      const data = await orderApi.createOrder(form);
+      const data = await orderApi.create(formattedData);
       if (!data.success) {
         setError(data.message || "Failed to create order");
         return;
@@ -189,11 +208,15 @@ export default function CreateOrderPage() {
             value={form.customerPhone}
             onChange={handleChange}
             required
-            placeholder="+91 98765 11111"
+            placeholder="+919876511111 dd"
+            pattern="^\+[1-9]\d{1,14}$"
+            title="Enter phone with country code, e.g. +919876511111"
             className="w-full border border-gray-200 rounded-lg px-3 py-2.5
-              text-sm focus:outline-none focus:ring-2 focus:ring-green-500
-              transition-all"
+      text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           />
+          <p className="text-xs text-gray-400 mt-1">
+            Include country code, no spaces. e.g. +919876511111
+          </p>
         </div>
 
         {/* Delivery address */}

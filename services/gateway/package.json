@@ -1,7 +1,7 @@
 {
-  "name": "notification-service",
+  "name": "gateway",
   "version": "1.0.0",
-  "type": "module",
+    "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
@@ -16,13 +16,11 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "firebase-admin": "^13.10.0",
-    "kafkajs": "^2.2.4",
-    "mongoose": "^9.7.1",
-    "morgan": "^1.11.0",
-    "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.11",
-    "twilio": "^6.0.2"
+    "express-rate-limit": "^8.5.2",
+    "http-proxy-middleware": "^3.0.7",
+    "ioredis": "^5.11.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

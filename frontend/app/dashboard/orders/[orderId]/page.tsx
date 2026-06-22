@@ -7,11 +7,13 @@ import Link from "next/link";
 import { orderApi } from "@/lib/orderApi";
 import { Order } from "@/constants/types";
 import { STATUS_STYLE } from "@/constants/constants";
+import { useAuth } from "@/lib/authContext";
 
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const { user } = useAuth();
+  const id = params.orderId as string;
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function OrderDetailPage() {
 
   const fetchOrder = async () => {
     try {
-      const data = await orderApi.getOrder(id);
+      const data = await orderApi.getOne(id);
       if (data.success) setOrder(data.data.order);
       else setError("Order not found");
     } catch {
@@ -35,10 +37,11 @@ export default function OrderDetailPage() {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!user?.id) return;
     fetchOrder();
-  }, [id]);
+  }, [user]);
 
+  console.log('id param', id)
   // ── Actions ──────────────────────────────────
   const handlePickup = async () => {
     setActionLoading(true);
@@ -52,7 +55,7 @@ export default function OrderDetailPage() {
     setActionLoading(true);
     const formData = new FormData();
     if (proofFile) formData.append("photo", proofFile);
-    const data = await orderApi.markDelivered(id, formData);
+    const data = await orderApi.markDelivered(id, proofFile);
     if (data.success) await fetchOrder();
     else alert(data.message);
     setActionLoading(false);
@@ -310,7 +313,7 @@ export default function OrderDetailPage() {
                 Proof of delivery
               </h3>
               <img
-                src={`http://localhost:3002/${order.proofPhoto}`}
+                src={`http://localhost:3012/${order.proofPhoto}`}
                 alt="Proof of delivery"
                 className="w-full max-w-xs rounded-lg border border-gray-200"
               />

@@ -161,7 +161,7 @@ export default function LiveMap({
 
                 // Color based on order status
                 const color = {
-                    pending: '#9ca3af',  // gray
+                    pending: '#cf39d4ff',  // gray
                     assigned: '#f59e0b',  // amber
                     picked_up: '#3b82f6',  // blue
                     in_transit: '#8b5cf6',  // purple

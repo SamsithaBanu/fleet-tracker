@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { dashboardData, allOrders } from "@/data/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +13,15 @@ import {
 import { statMeta, statusConfig } from "@/data/data";
 import { useEffect, useState } from "react";
 import { orderApi } from "@/lib/orderApi";
+import { readableDate } from "@/lib/utilsFunction";
+import moment from "moment-timezone";
+import { Truck } from "lucide-react";
 
 export default function DashboardPage() {
-  const [analytics, setAnalytics] = useState<any>(null)
-  const [recentOrders, setRecentOrders] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState("");
 
   // Add this useEffect inside your component
   useEffect(() => {
@@ -25,24 +29,32 @@ export default function DashboardPage() {
       try {
         const [analyticsRes, ordersRes] = await Promise.all([
           orderApi.getAnalytics(),
-          orderApi.getOrders('?limit=5'),
-        ])
-        if (analyticsRes.success) setAnalytics(analyticsRes.data)
-        if (ordersRes.success) setRecentOrders(ordersRes.data.orders)
+          orderApi.getAll("?limit=12"),
+        ]);
+        if (analyticsRes.success) {
+          setAnalytics(analyticsRes.data);
+          setLastUpdated(
+            moment(analyticsRes?.data?.createdAt)
+              .tz("Asia/Kolkata")
+              .format("DD-MM-YYYY hh:mm A"),
+          );
+        }
+        if (ordersRes.success) setRecentOrders(ordersRes.data.orders);
       } catch (err) {
-        console.error('Dashboard error:', err)
+        console.error("Dashboard error:", err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchData()
+    };
+    fetchData();
   }, []);
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#088395]" />
-    </div>
-  )
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#088395]" />
+      </div>
+    );
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -63,30 +75,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {dashboardData.map((stat) => {
-          const meta = statMeta[stat.label];
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        {Object.entries(analytics).filter(([key, value])=> key !== 'createdAt' && key !== 'successRate').map(([key, value]) => {
           return (
             <Card
-              key={stat.label}
+              key={key}
               className="border border-gray-200/80 shadow-sm hover:shadow-md transition-shadow duration-200"
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">
-                  {stat.label}
+                <CardTitle className="text-sm font-medium text-gray-500 capitalize">
+                  {key}
                 </CardTitle>
-                {meta && (
                   <div
-                    className={`h-8 w-8 rounded-lg ${meta.bg} ${meta.color} flex items-center justify-center`}
+                    className={`h-8 w-8 rounded-lg bg-[violet]/10 color-[violet] flex items-center justify-center`}
                   >
-                    {meta.icon}
+                    <Truck className="h-4 w-4" />
                   </div>
-                )}
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-3xl font-bold text-gray-900">{value}</p>
                 <p className="text-xs text-gray-400 mt-1 font-medium">
-                  Updated just now
+                  Updated {lastUpdated}
                 </p>
               </CardContent>
             </Card>
@@ -141,21 +150,23 @@ export default function DashboardPage() {
                 };
                 return (
                   <TableRow
-                    key={order.id}
+                    key={order._id}
                     className="hover:bg-[#088395]/3 transition-colors"
                   >
                     <TableCell className="pl-6 font-mono text-sm font-semibold text-[#088395]">
                       {order.orderId}
                     </TableCell>
                     <TableCell className="text-sm font-medium text-gray-800">
-                      {order.customerName}
+                      {order?.customer?.name}
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
-                      {order.Warehouse}
+                      {order?.warehouseId?.name}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {order.date}{" "}
-                      <span className="text-gray-400">{order.time}</span>
+                      <span className="text-gray-400">
+                        {readableDate(order?.updatedAt)}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge

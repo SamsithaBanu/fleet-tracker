@@ -28,7 +28,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Search } from "lucide-react";
 
-import { orderApi } from "@/lib/orderApi";
+import { orderApi, wareHouseAPi } from "@/lib/orderApi";
 import { statusConfig } from "@/data/data";
 import { STATUSES } from "@/constants/constants";
 import toast from "react-hot-toast";
@@ -61,6 +61,20 @@ export default function OrdersPage() {
     notes: "",
   });
 
+    const formatPhoneNumber = (phone: string): string => {
+    // Remove all spaces, dashes, parentheses
+    let cleaned = phone.replace(/[\s\-\(\)]/g, "");
+
+    // If it doesn't start with +, add +91 (India)
+    if (!cleaned.startsWith("+")) {
+      // Remove leading 0 if present
+      cleaned = cleaned.replace(/^0/, "");
+      cleaned = `+91${cleaned}`;
+    }
+
+    return cleaned;
+  };
+
   const fetchOrders = async () => {
     setLoading(true);
 
@@ -71,7 +85,7 @@ export default function OrdersPage() {
         params += `?status=${statusFilter}`;
       }
 
-      const data = await orderApi.getOrders(params);
+      const data = await orderApi.getAll(params);
 
       if (data.success) {
         setOrders(data.data.orders);
@@ -85,7 +99,7 @@ export default function OrdersPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const data = await orderApi.getWarehouses();
+      const data = await wareHouseAPi.getAll();
 
       if (data.success) {
         setWarehouses(data.data.warehouses);
@@ -117,8 +131,13 @@ export default function OrdersPage() {
     setLoading(true);
     setError("");
 
+    const formattedData = {
+      ...form,
+      customerPhone: formatPhoneNumber(form.customerPhone),
+    };
+
     try {
-      const data = await orderApi.createOrder(form);
+      const data = await orderApi.create(formattedData);
 
       if (!data.success) {
         setError(data.message || "Failed to create order");
@@ -128,6 +147,7 @@ export default function OrdersPage() {
       setIsAddOrder(false);
 
       fetchOrders();
+      console.log('data', data, data?.data?.order?._id);
 
       router.push(`/dashboard/orders/${data.data.order._id}`);
     } catch (error) {
@@ -212,7 +232,7 @@ export default function OrdersPage() {
             };
 
             return (
-              <TableRow key={order._id}>
+              <TableRow key={order._id} onClick={()=>router.push(`/dashboard/orders/${order?._id}`)}>
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">{order.orderId}</span>
@@ -274,17 +294,25 @@ export default function OrdersPage() {
               </div>
 
               {/* Phone */}
-              <div className="grid gap-3 px-4">
-                <Label htmlFor="customerPhone">Phone Number</Label>
-
-                <Input
-                  id="customerPhone"
-                  name="customerPhone"
-                  placeholder="Enter phone number"
-                  value={form.customerPhone}
-                  onChange={handleChange}
-                />
-              </div>
+              <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">
+            Customer phone *
+          </label>
+          <input
+            name="customerPhone"
+            value={form.customerPhone}
+            onChange={handleChange}
+            required
+            placeholder="+919876511111 dd"
+            pattern="^\+[1-9]\d{1,14}$"
+            title="Enter phone with country code, e.g. +919876511111"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5
+      text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Include country code, no spaces. e.g. +919876511111
+          </p>
+        </div>
 
               {/* Email */}
               <div className="grid gap-3 px-4">

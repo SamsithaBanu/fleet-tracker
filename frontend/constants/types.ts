@@ -5,6 +5,8 @@ export interface WarehouseItem {
     status: string;
     ordersToday: number;
     activeDrivers: number;
+    lat: string;
+    lng: string
 }
 
 export interface Warehouse {

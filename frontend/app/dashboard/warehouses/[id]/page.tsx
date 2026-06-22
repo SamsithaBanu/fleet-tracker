@@ -4,14 +4,18 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { orderApi } from "@/lib/orderApi";
+import { orderApi, wareHouseAPi } from "@/lib/orderApi";
 import { STATUS_STYLE } from "@/constants/constants";
 import { Driver, Order, WarehouseItem } from "@/constants/types";
+import { IoIosArrowForward, IoIosArrowRoundBack } from "react-icons/io";
+import { IoIosArrowRoundForward } from "react-icons/io";
 
 export default function WarehouseDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+
+  console.log("params", params);
 
   const [warehouse, setWarehouse] = useState<WarehouseItem | null>(null);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -23,7 +27,7 @@ export default function WarehouseDetailPage() {
   useEffect(() => {
     const fetchWarehouse = async () => {
       try {
-        const data = await orderApi.getWarehouse(id);
+        const data = await wareHouseAPi.getOne(id);
         if (!data.success) {
           setError("Warehouse not found");
           return;
@@ -74,7 +78,9 @@ export default function WarehouseDetailPage() {
         </button>
       </div>
     );
-  }
+  };
+
+  console.log('warehou', warehouse)
 
   return (
     <div>
@@ -84,7 +90,7 @@ export default function WarehouseDetailPage() {
         className="flex items-center gap-1.5 text-xs text-gray-500
           hover:text-gray-700 mb-5 transition-colors"
       >
-        ← Back to warehouses
+        <IoIosArrowRoundBack size={15} /> Back to warehouses
       </button>
 
       {/* Header */}
@@ -163,9 +169,10 @@ export default function WarehouseDetailPage() {
             href={`https://maps.google.com/?q=${warehouse.location.lat},${warehouse.location.lng}`}
             target="_blank"
             rel="noreferrer"
-            className="ml-auto text-xs text-green-600 hover:underline"
+            className="ml-auto text-xs text-green-600 hover:underline flex flex-row gap-2"
           >
-            Open in Google Maps →
+            <span> Open in Google Maps </span>{" "}
+            <IoIosArrowRoundForward size={15} />
           </a>
         </div>
       </div>
@@ -264,9 +271,9 @@ export default function WarehouseDetailPage() {
                     <td className="px-5 py-3">
                       <Link
                         href={`/dashboard/drivers/${driver._id}`}
-                        className="text-xs text-green-600 hover:underline"
+                        className="text-xs text-green-600 hover:underline flex flex-row gap-2"
                       >
-                        View →
+                        <span>View</span> <IoIosArrowRoundForward size={15} />
                       </Link>
                     </td>
                   </tr>
@@ -337,7 +344,7 @@ export default function WarehouseDetailPage() {
                         href={`/dashboard/orders/${order._id}`}
                         className="text-xs text-green-600 hover:underline"
                       >
-                        View →
+                        View <IoIosArrowRoundForward size={15} />
                       </Link>
                     </td>
                   </tr>

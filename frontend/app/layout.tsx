@@ -4,6 +4,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "../lib/authContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,7 +37,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className={`min-h-full flex flex-col ${inter.className}`}>
-        <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+        </AuthProvider>
         <Toaster position="top-right" reverseOrder={false} />
       </body>
     </html>

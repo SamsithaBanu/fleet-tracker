@@ -16,9 +16,20 @@ connectDB()
 connectProducer()
 
 const app = express()
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 3012
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
+
+app.options(/.*/, cors());
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: err.message });
+});
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -30,6 +41,15 @@ app.use('/warehouses', warehouseRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'order-service', port: PORT })
+});
+
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        service: 'order-service',
+        port: PORT,
+        time: new Date().toISOString()
+    })
 });
 
 app.listen(PORT, () => {

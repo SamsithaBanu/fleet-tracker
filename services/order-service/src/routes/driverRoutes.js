@@ -8,6 +8,6 @@ router.get('/', verifyToken, getAllDrivers);
 router.post('/', verifyToken, addDriver);
 router.get('/:id', verifyToken, getDriver);
 router.put('/status', verifyToken, toggleStatus);
-router.get('/:driverID/earnings', verifyToken, getEarnings);
+router.get('/:id/earnings', verifyToken, getEarnings);
 
 export default router;

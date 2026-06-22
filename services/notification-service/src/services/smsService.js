@@ -23,9 +23,25 @@ const initTwilio = () => {
   }
 };
 
+// services/notification-service/src/services/smsService.js
+// Add this helper at the top
+
+const isValidE164 = (phone) => {
+  // E.164 format: + followed by 1-15 digits
+  return /^\+[1-9]\d{1,14}$/.test(phone);
+};
+
+// Update sendSMS function
 const sendSMS = async (to, message) => {
+  // Validate phone format first
+  if (!isValidE164(to)) {
+    logger.warn(
+      `Invalid phone format: ${to} — skipping SMS. Must be E.164 like +919876543210`,
+    );
+    return { success: false, error: "Invalid phone format" };
+  }
+
   if (!twilioClient) {
-    // Log instead of sending when in dev mode
     logger.warn(`SMS (dev mode) → ${to}: ${message}`);
     return { success: true, dev: true };
   }
@@ -36,11 +52,12 @@ const sendSMS = async (to, message) => {
       from: process.env.TWILIO_PHONE_NUMBER,
       to,
     });
-    logger.success(`SMS sent to ${to}[${result.sid}]`);
+
+    logger.success(`SMS sent → ${to} [${result.sid}]`);
     return { success: true, sid: result.sid };
-  } catch (error) {
-    logger.error(`Error sending SMS to ${to}: ${error.message}`);
-    return { success: false, error: error.message };
+  } catch (err) {
+    logger.error(`SMS failed → ${to}:`, err.message);
+    return { success: false, error: err.message };
   }
 };
 

@@ -434,6 +434,7 @@ export const getAnalytics = async (req, res) => {
         failedToday,
         pendingNow,
         onlineDrivers: onlineDriverCount,
+        createdAt: Date.now(),
         successRate:
           totalToday > 0 ? ((deliveredToday / totalToday) * 100).toFixed(1) : 0,
       },

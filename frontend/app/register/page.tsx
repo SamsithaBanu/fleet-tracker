@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { register } from "@/lib/api";
+import { authApi } from "@/lib/orderApi";
 
 export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function RegisterPage() {
         setError("");
 
         try {
-            await register(formData);
+            await authApi.register(formData);
             window.location.href = "/login";
         } catch (err: any) {
             setError(err.message || "An error occurred during registration");

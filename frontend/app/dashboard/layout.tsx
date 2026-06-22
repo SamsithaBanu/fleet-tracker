@@ -1,27 +1,33 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { redirect, usePathname } from 'next/navigation'
 import TopBar from '@/components/TopBar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { navItems } from '@/data/data'
+import { useAuth } from '@/lib/authContext'
+import {ProtectedRoute} from '../../components/ProtectedRoute';
+import { FiLogOut } from "react-icons/fi";
+import { useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
+  const router = useRouter();
 
   return (
+    <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
     <div className="flex h-screen bg-[#f0f9fa]">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-[#088395]/15 flex flex-col shadow-sm">
         {/* Logo */}
         <div className="p-5 border-b border-[#088395]/10">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 cursor-pointer"   onClick={() => router.push('/')}>
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#088395] to-[#2C687B] flex items-center justify-center shadow-lg shadow-[#088395]/20">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
@@ -96,22 +102,30 @@ export default function DashboardLayout({
 
         {/* Footer */}
         <Separator className="bg-[#088395]/10" />
-        <div className="p-3">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#088395]/5 transition-colors cursor-pointer group">
-            <Avatar className="h-8 w-8 shrink-0 ring-2 ring-[#088395]/20">
-              <AvatarFallback className="bg-gradient-to-br from-[#088395] to-[#2C687B] text-white text-xs font-bold">
-                SB
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 leading-tight truncate">Samsitha Banu</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#088395] animate-pulse shadow-[0_0_4px_#088395]" />
-                <p className="text-[11px] text-[#088395]/80 font-medium">Admin · Online</p>
+        <div className="p-3 border-t border-gray-100">
+            <div className="flex items-center gap-2.5 px-2 py-2">
+              <div className="w-7 h-7 rounded-full bg-green-100 flex
+                items-center justify-center text-green-700 text-xs font-bold">
+                {user?.name?.charAt(0) ?? 'A'}
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-900 truncate">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-gray-400 capitalize">
+                  {user?.role}
+                </p>
+              </div>
+              <button
+                onClick={logout}
+                className="text-xs text-gray-400 hover:text-red-500
+                  transition-colors px-1"
+                title="Sign out"
+              >
+                <FiLogOut size={20} color='black' />
+              </button>
             </div>
           </div>
-        </div>
       </aside>
 
       {/* Main content */}
@@ -122,5 +136,6 @@ export default function DashboardLayout({
         </main>
       </div>
     </div>
+    </ProtectedRoute>
   )
 }

@@ -1,6 +1,7 @@
 import Driver from "../models/Driver.js";
 import Order from "../models/Order.js";
 import redis from "../utils/redisClient.js";
+import mongoose from "mongoose";
 
 export const getAllDrivers = async (req, res) => {
     try {
@@ -38,37 +39,56 @@ export const addDriver = async (req, res) => {
     }
 };
 
+// services/order-service/src/controllers/driverController.js
+
 export const getDriver = async (req, res) => {
-    try {
-        const driver = await Driver.findById(req.params.id)
-            .populate('warehouseId', 'name address')
+  try {
+    const driver = await Driver.findById(req.params.id)
+      .populate('warehouseId', 'name address')
 
-        if (!driver) {
-            return res.status(404).json({ success: false, message: 'Driver not found' })
-        }
-
-        // Get today orders count
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const todayOrders = await Order.find({
-            driverId: driver._id,
-            createdAt: { $gte: today }
-        })
-
-        res.json({
-            success: true,
-            data: {
-                driver,
-                todayDeliveries: todayOrders.filter(o => o.status === 'delivered').length,
-                todayOrders,
-            }
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        })
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found' })
     }
+
+    // ── FIXED: Proper today boundary calculation ──
+    const now = new Date()
+
+    // Start of today (local midnight)
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0, 0, 0, 0
+    )
+
+    // End of today (just before midnight tomorrow)
+    const endOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23, 59, 59, 999
+    )
+
+    console.log('🔍 Today range:', startOfToday, 'to', endOfToday)
+
+    const todayOrders = await Order.find({
+      driverId: driver._id,
+      createdAt: { $gte: startOfToday, $lte: endOfToday }
+    })
+
+    console.log(`📦 Found ${todayOrders.length} orders today for driver ${driver.name}`)
+
+    res.json({
+      success: true,
+      data: {
+        driver,
+        todayDeliveries: todayOrders.filter(o => o.status === 'delivered').length,
+        todayOrders,
+      }
+    })
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message })
+  }
 }
 
 export const toggleStatus = async (req, res) => {
@@ -123,37 +143,46 @@ export const toggleStatus = async (req, res) => {
 }
 
 export const getEarnings = async (req, res) => {
-    try {
-        const { driverId } = req.params
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
+  try {
+    const { id } = req.params
+    const driverObjectId = new mongoose.Types.ObjectId(id)
 
-        const weekAgo = new Date()
-        weekAgo.setDate(weekAgo.getDate() - 7)
-        weekAgo.setHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
-        const [todayOrders, weekOrders] = await Promise.all([
-            Order.find({ driverId, status: 'delivered', createdAt: { $gte: today } }),
-            Order.find({ driverId, status: 'delivered', createdAt: { $gte: weekAgo } }),
-        ])
+    const weekAgo = new Date()
+    weekAgo.setDate(weekAgo.getDate() - 7)
+    weekAgo.setHours(0, 0, 0, 0);
 
-        // Simple earning calculation — ₹60 per delivery
-        const ratePerDelivery = 60
+    console.log('driverobje', driverObjectId)
 
-        res.json({
-            success: true,
-            data: {
-                todayDeliveries: todayOrders.length,
-                todayEarnings: todayOrders.length * ratePerDelivery,
-                weekDeliveries: weekOrders.length,
-                weekEarnings: weekOrders.length * ratePerDelivery,
-                recentOrders: todayOrders,
-            }
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error?.message
-        })
-    }
+    const [todayOrders, weekOrders] = await Promise.all([
+      Order.find({
+        driverId: driverObjectId,
+        status: 'delivered',
+        createdAt: { $gte: today }
+      }),
+      Order.find({
+        driverId: driverObjectId,
+        status: 'delivered',
+        createdAt: { $gte: weekAgo }
+      }),
+    ])
+
+    const ratePerDelivery = 60
+
+    res.json({
+      success: true,
+      data: {
+        todayDeliveries: todayOrders?.length,
+        todayEarnings: todayOrders?.length * ratePerDelivery,
+        weekDeliveries: weekOrders?.length,
+        weekEarnings: weekOrders?.length * ratePerDelivery,
+        recentOrders: todayOrders,
+      }
+    })
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message })
+  }
 }

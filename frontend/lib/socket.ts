@@ -6,8 +6,11 @@ let socket: Socket | null = null
 export const getSocket = () => {
   if (!socket) {
     socket = io('http://localhost:3003', {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000
     })
 
     socket.on('connect', () => {
