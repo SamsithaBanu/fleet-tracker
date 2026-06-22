@@ -214,7 +214,6 @@ export default function DriverDetailPage() {
             </div>
           </div>
         </div>
-        {console.log("driver", driver)}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
           {[
             {
