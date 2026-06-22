@@ -66,7 +66,7 @@ const startConsumer = async () => {
 
 // ── Event router ──────────────────────────────
 // Each Kafka event triggers specific notifications
-const handleEvent = async (event, data) => {
+export const handleEvent = async (event, data) => {
   const trackingLink = `${FRONTEND_URL}/track/${data.orderNumber}`;
 
   switch (event) {
