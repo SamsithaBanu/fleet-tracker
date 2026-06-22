@@ -4,7 +4,7 @@ import Warehouse from "../models/Warehouse.js";
 import redis from "../utils/redisClient.js";
 import { autoAssignDriver } from "../services/autoAssign.js";
 import { publishEvent } from "../services/kafkaProducer.js";
-import { notifyOrderEvent } from "../../../notification-service/src/services/notifyService.js";
+import { notifyOrderEvent } from "../services/notifyService.js";
 
 // Generate a readable order ID like ORD-001
 const generateOrderId = async () => {
