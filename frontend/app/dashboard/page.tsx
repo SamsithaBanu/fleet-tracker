@@ -1,5 +1,4 @@
 "use client";
-import { dashboardData, allOrders } from "@/data/data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { statMeta, statusConfig } from "@/data/data";
+import { statusConfig } from "@/data/data";
 import { useEffect, useState } from "react";
 import { orderApi } from "@/lib/orderApi";
 import { readableDate } from "@/lib/utilsFunction";
@@ -93,7 +92,7 @@ export default function DashboardPage() {
                   </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-gray-900">{value}</p>
+                <p className="text-3xl font-bold text-gray-900">{String(value)}</p>
                 <p className="text-xs text-gray-400 mt-1 font-medium">
                   Updated {lastUpdated}
                 </p>

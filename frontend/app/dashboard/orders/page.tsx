@@ -61,7 +61,7 @@ export default function OrdersPage() {
     notes: "",
   });
 
-    const formatPhoneNumber = (phone: string): string => {
+  const formatPhoneNumber = (phone: string): string => {
     // Remove all spaces, dashes, parentheses
     let cleaned = phone.replace(/[\s\-\(\)]/g, "");
 
@@ -110,8 +110,11 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
-    fetchWarehouses();
+    const loadOrders = async () => {
+      fetchOrders();
+      fetchWarehouses();
+    };
+    loadOrders();
   }, [statusFilter]);
 
   const handleChange = (
@@ -147,7 +150,7 @@ export default function OrdersPage() {
       setIsAddOrder(false);
 
       fetchOrders();
-      console.log('data', data, data?.data?.order?._id);
+      console.log("data", data, data?.data?.order?._id);
 
       router.push(`/dashboard/orders/${data.data.order._id}`);
     } catch (error) {
@@ -232,7 +235,10 @@ export default function OrdersPage() {
             };
 
             return (
-              <TableRow key={order._id} onClick={()=>router.push(`/dashboard/orders/${order?._id}`)}>
+              <TableRow
+                key={order._id}
+                onClick={() => router.push(`/dashboard/orders/${order?._id}`)}
+              >
                 <TableCell>
                   <div className="flex flex-col">
                     <span className="font-medium">{order.orderId}</span>
@@ -295,24 +301,24 @@ export default function OrdersPage() {
 
               {/* Phone */}
               <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">
-            Customer phone *
-          </label>
-          <input
-            name="customerPhone"
-            value={form.customerPhone}
-            onChange={handleChange}
-            required
-            placeholder="+919876511111 dd"
-            pattern="^\+[1-9]\d{1,14}$"
-            title="Enter phone with country code, e.g. +919876511111"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  Customer phone *
+                </label>
+                <input
+                  name="customerPhone"
+                  value={form.customerPhone}
+                  onChange={handleChange}
+                  required
+                  placeholder="+919876511111 dd"
+                  pattern="^\+[1-9]\d{1,14}$"
+                  title="Enter phone with country code, e.g. +919876511111"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5
       text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Include country code, no spaces. e.g. +919876511111
-          </p>
-        </div>
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Include country code, no spaces. e.g. +919876511111
+                </p>
+              </div>
 
               {/* Email */}
               <div className="grid gap-3 px-4">

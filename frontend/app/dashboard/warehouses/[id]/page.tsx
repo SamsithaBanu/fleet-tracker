@@ -78,9 +78,9 @@ export default function WarehouseDetailPage() {
         </button>
       </div>
     );
-  };
+  }
 
-  console.log('warehou', warehouse)
+  console.log("warehou", warehouse);
 
   return (
     <div>

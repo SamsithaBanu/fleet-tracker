@@ -13,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
 
-async function onSubmit(event) {
+async function onSubmit(event: any) {
   event.preventDefault();
 
   try {

@@ -4,7 +4,7 @@
 import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { getSocket } from '@/lib/socket'
-import { orderApi, warehouseApi } from '@/lib/orderApi';
+import { orderApi } from '@/lib/orderApi';
 
 // Dynamic import — Leaflet cannot run on server
 const LiveMap = dynamic(
@@ -32,7 +32,7 @@ interface DriverLocation {
 export default function MapPage() {
   const [warehouses, setWarehouses]= useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
-  const [drivers, setDrivers]         = useState<Record<string, DriverLocation>>({})
+  const [drivers, setDrivers]         = useState<any[]>([])
   const [connected, setConnected]     = useState(false)
   const [lastUpdate, setLastUpdate]   = useState<string>('')
   const socketRef = useRef<any>(null)

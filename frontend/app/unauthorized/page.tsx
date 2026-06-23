@@ -17,7 +17,7 @@ const UnauthorizedPage = () => {
                     Access denied
                 </h1>
                 <p className="text-[#6B7280] text-sm mb-10 font-medium">
-                    You don't have permission to view this page.
+                    You dont have permission to view this page.
                 </p>
 
                 {/* Dashboard Button */}

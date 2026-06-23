@@ -37,11 +37,14 @@ export default function OrderDetailPage() {
   };
 
   useEffect(() => {
-    if (!user?.id) return;
-    fetchOrder();
+    const loadOrder = async () => {
+      if (!user?.id) return;
+      await fetchOrder();
+    };
+
+    loadOrder();
   }, [user]);
 
-  console.log('id param', id)
   // ── Actions ──────────────────────────────────
   const handlePickup = async () => {
     setActionLoading(true);

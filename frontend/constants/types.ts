@@ -1,18 +1,19 @@
 export interface WarehouseItem {
-    id: string | number;
-    name: string;
-    location: string;
-    status: string;
-    ordersToday: number;
-    activeDrivers: number;
-    lat: string;
-    lng: string
+  id: string | number;
+  name: string;
+  location: { lat: string; lng: string };
+  status: string;
+  ordersToday: number;
+  activeDrivers: number;
+  lat: string;
+  lng: string;
+  address: string;
 }
 
 export interface Warehouse {
-  _id: string
-  name: string
-  address: string
+  _id: string;
+  name: string;
+  address: string;
 }
 
 export interface Order {
@@ -38,12 +39,12 @@ export interface Order {
 }
 
 export interface Driver {
-  _id: string
-  name: string
-  phone: string
-  email: string
-  isOnline: boolean
-  rating: number
-  totalDeliveries: number
-  licenseNumber: string
+  _id: string;
+  name: string;
+  phone: string;
+  email: string;
+  isOnline: boolean;
+  rating: number;
+  totalDeliveries: number;
+  licenseNumber: string;
 }

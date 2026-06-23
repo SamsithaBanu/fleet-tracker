@@ -2,8 +2,17 @@
 import { orderApi } from "@/lib/orderApi";
 import { useEffect, useState } from "react";
 
+type Order = Record<string, unknown>;
+
+interface LiveOrdersState {
+  pending: Order[];
+  assigned: Order[];
+  picked_up: Order[];
+  in_transit: Order[];
+}
+
 const LivePage = () => {
-  const [liveOrders, setLiveOrders] = useState<any>({
+  const [liveOrders, setLiveOrders] = useState<LiveOrdersState>({
     pending: [],
     assigned: [],
     picked_up: [],
@@ -13,7 +22,7 @@ const LivePage = () => {
 
   useEffect(() => {
     const fetchLiveOrders = async () => {
-      const data = await orderApi.getLiveOrders();
+      const data = await orderApi.getAll();
       if (data.success) setLiveOrders(data.data.orders);
       setLoading(false);
     };

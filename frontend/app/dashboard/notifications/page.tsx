@@ -1,7 +1,7 @@
 // frontend/app/dashboard/notifications/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Bell, Package, CheckCircle2, Clock, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -49,23 +49,31 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchNotifications()
-    // Auto-refresh every 15 seconds
-    const interval = setInterval(fetchNotifications, 15000)
-    return () => clearInterval(interval)
-  }, [])
+const fetchNotifications = async () => {
+  try {
+    const data = await notificationApi.getAll();
 
-  const fetchNotifications = async () => {
-    try {
-      const data = await notificationApi.getAll()
-      if (data.success) setNotifications(data.data.notifications)
-    } catch (err) {
-      console.error('Notification fetch error:', err)
-    } finally {
-      setLoading(false)
+    if (data.success) {
+      setNotifications(data.data.notifications);
     }
+  } catch (err) {
+    console.error("Notification fetch error:", err);
+  } finally {
+    setLoading(false);
   }
+};
+
+useEffect(() => {
+  const loadNotifications = async () => {
+    await fetchNotifications();
+  };
+
+  loadNotifications();
+
+  const interval = setInterval(loadNotifications, 15000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const unreadCount = notifications.filter(n => n.status === 'unread').length
 
