@@ -15,6 +15,8 @@ import Notification from "../model /Notification.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3001";
 
+logger.info(`KAFKA_BROKER=${process.env.KAFKA_BROKER}`);
+
 const kafka = new Kafka({
   clientId: "notification-service",
   brokers: [process.env.KAFKA_BROKER || "localhost:9092"],
