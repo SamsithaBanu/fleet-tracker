@@ -21,7 +21,7 @@ export default function DashboardLayout({
   const router = useRouter();
 
   return (
-    <ProtectedRoute allowedRoles={['admin', 'superadmin']}>
+    <ProtectedRoute allowedRoles={['admin', 'superadmin','driver']}>
     <div className="flex h-screen bg-[#f0f9fa]">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-[#088395]/15 flex flex-col shadow-sm">

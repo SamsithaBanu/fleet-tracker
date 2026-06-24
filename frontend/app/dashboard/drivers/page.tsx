@@ -127,7 +127,7 @@ export default function DriversPage() {
   };
 
   return (
-    <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+    <ProtectedRoute allowedRoles={["admin", "superadmin", "driver"]}>
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between">
