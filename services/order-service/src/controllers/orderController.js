@@ -95,9 +95,8 @@ export const createOrder = async (req, res) => {
       driverName = assignedDriver?.name || null;
       // ── END ADD ─────────────────────────────
 
-      // Publish event to Kafka — notification service will send SMS + push
-      // REPLACE the old publishEvent with this one:
-      await notifyOrderEvent("order-events", "order.assigned", {
+      // Notify service directly with the actual event name
+      await notifyOrderEvent("order.assigned", {
         orderId: order._id.toString(),
         orderNumber: orderId,
         driverId: nearest.driverId,
@@ -112,7 +111,7 @@ export const createOrder = async (req, res) => {
       // No driver available — order stays pending
       console.log(`⚠️  No driver available for order ${orderId}`);
 
-      await notifyOrderEvent("order-events", "order.pending_no_driver", {
+      await notifyOrderEvent("order.pending_no_driver", {
         orderId: order._id.toString(),
         orderNumber: orderId,
       });
@@ -266,8 +265,8 @@ export const markPickedUp = async (req, res) => {
     order.timeline.pickedUpAt = new Date();
     await order.save();
 
-    // Publish Kafka event
-    await notifyOrderEvent("order-events", "order.picked_up", {
+    // Notify service that the order was picked up
+    await notifyOrderEvent("order.picked_up", {
       orderId: order._id.toString(),
       orderNumber: order.orderId,
       driverId: order.driverId?.toString(),
@@ -322,8 +321,8 @@ export const markDelivered = async (req, res) => {
       });
     }
 
-    // Publish Kafka event — notification service sends "Delivered!" SMS
-    await notifyOrderEvent("order-events", "order.delivered", {
+    // Notify service that the order was delivered
+    await notifyOrderEvent("order.delivered", {
       orderId: order._id.toString(),
       orderNumber: order.orderId,
       driverId: order.driverId?.toString(),
@@ -363,14 +362,13 @@ export const markFailed = async (req, res) => {
       await redis.del(`driver:${order.driverId}:busy`);
     }
 
-    // Publish not event
+    // Notify service that the order failed
     // await publishEvent("order-events", "order.failed", {
-        await notifyOrderEvent("order-events", "order.failed", {
-
+    await notifyOrderEvent("order.failed", {
       orderId: order._id.toString(),
       orderNumber: order.orderId,
       customerPhone: order.customer.phone,
-            // customerName: order.customer.name,
+      // customerName: order.customer.name,
       reason: order.failReason,
     });
 
