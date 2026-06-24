@@ -60,6 +60,7 @@ export default function DriverDetailPage() {
   const [error, setError] = useState("");
   const [gpsError, setGpsError] = useState("");
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [gpsActive, setGpsActive] = useState(false);
   const [todayDelivery, setTotalDelivery] = useState<Order[]>([]);
 
   const { user } = useAuth();
@@ -86,6 +87,7 @@ export default function DriverDetailPage() {
     if (watchId !== null) {
       navigator.geolocation.clearWatch(watchId);
       setWatchId(null);
+      setGpsActive(false);
     }
   };
 
@@ -122,6 +124,7 @@ export default function DriverDetailPage() {
     );
 
     setWatchId(id);
+    setGpsActive(true);
   };
 
   useEffect(() => {
@@ -280,11 +283,29 @@ const handleToggle = async () => {
               </button>
               {gpsError ? (
                 <p className="text-xs text-red-600">{gpsError}</p>
-              ) : driver.isOnline ? (
-                <p className="text-xs text-green-600">
-                  GPS tracking will start if the browser allows location access.
-                </p>
               ) : null}
+
+              {driver.isOnline ? (
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={startGeolocation}
+                    disabled={gpsActive || toggling}
+                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all disabled:opacity-50 ${gpsActive ? "border-gray-200 text-gray-600" : "border-green-200 text-green-600 hover:bg-green-50"}`}
+                  >
+                    {gpsActive ? "GPS tracking active" : "Start GPS tracking"}
+                  </button>
+                  {!gpsActive && (
+                    <p className="text-xs text-green-600">
+                      Click to start sending live driver location to the map.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  Go online to enable GPS tracking.
+                </p>
+              )}
             </div>
           </div>
 
