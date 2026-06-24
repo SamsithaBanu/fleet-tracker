@@ -8,6 +8,7 @@ import { orderApi } from "@/lib/orderApi";
 import { Order } from "@/constants/types";
 import { STATUS_STYLE } from "@/constants/constants";
 import { useAuth } from "@/lib/authContext";
+import { ORDER_BASE } from "@/lib/config";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -316,7 +317,7 @@ export default function OrderDetailPage() {
                 Proof of delivery
               </h3>
               <img
-                src={`http://localhost:3012/${order.proofPhoto}`}
+                src={`${ORDER_BASE}/${order.proofPhoto}`}
                 alt="Proof of delivery"
                 className="w-full max-w-xs rounded-lg border border-gray-200"
               />

@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { getSocket } from '@/lib/socket'
 import { orderApi } from '@/lib/orderApi';
+import { ORDER_BASE } from '@/lib/config';
 
 // Dynamic import — Leaflet cannot run on server
 const LiveMap = dynamic(
@@ -41,7 +42,7 @@ export default function MapPage() {
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
 
-    fetch('http://localhost:3012/warehouses', {
+    fetch(`${ORDER_BASE}/warehouses`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(r => r.json())

@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getSocket } from "@/lib/socket";
+import { ORDER_BASE } from "@/lib/config";
 
 const CustomerMap = dynamic(() => import("@/components/map/CustomerMap"), {
   ssr: false,
@@ -34,7 +35,7 @@ export default function TrackOrderPage() {
 
   const fetchOrder = async () => {
     try {
-      const res = await fetch(`http://localhost:3012/orders/track/${orderId}`);
+      const res = await fetch(`${ORDER_BASE}/orders/track/${orderId}`);
       const data = await res.json();
 
       if (data.success) {
