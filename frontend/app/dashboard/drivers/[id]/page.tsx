@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { driverApi } from "@/lib/orderApi";
+import { driverApi, trackingApi } from "@/lib/orderApi";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/authContext";
 
@@ -58,9 +58,71 @@ export default function DriverDetailPage() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState("");
+  const [gpsError, setGpsError] = useState("");
+  const [watchId, setWatchId] = useState<number | null>(null);
   const [todayDelivery, setTotalDelivery] = useState<Order[]>([]);
 
   const { user } = useAuth();
+
+  const getCurrentPosition = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        return reject(new Error("Browser does not support GPS."));
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        reject,
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 10000,
+        },
+      );
+    });
+  };
+
+  const stopGeolocation = () => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
+  };
+
+  const startGeolocation = async () => {
+    if (!navigator.geolocation || !driver) {
+      setGpsError("Browser GPS is not available.");
+      return;
+    }
+
+    const id = navigator.geolocation.watchPosition(
+      async (position) => {
+        const { latitude, longitude, speed } = position.coords;
+        setGpsError("");
+
+        try {
+          await trackingApi.updateLocation({
+            driverId: driver._id,
+            lat: latitude,
+            lng: longitude,
+            speed: speed ?? 0,
+          });
+        } catch (err) {
+          console.error("GPS update failed", err);
+        }
+      },
+      (positionError) => {
+        setGpsError(positionError.message || "Unable to read GPS location.");
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 3000,
+        timeout: 10000,
+      },
+    );
+
+    setWatchId(id);
+  };
 
   useEffect(() => {
     const fetchAll = async () => {  
@@ -74,34 +136,67 @@ export default function DriverDetailPage() {
           setTotalDelivery(driverRes?.data?.todayOrders);
         } else setError("Driver not found");
         if (earningsRes.success) setEarnings(earningsRes.data);
-      } catch (err: any) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (!user?.id) return;
-    fetchAll();
-  }, [user?.id]);
-
-  // Toggle online / offline
-  const handleToggle = async () => {
-    if (!driver) return;
-    setToggling(true);
-    try {
-      const data = await driverApi.toggleStatus({
-        driverId: driver._id,
-        isOnline: !driver.isOnline,
-        lat: driver.warehouseId ? 12.9352 : 12.9716,
-        lng: driver.warehouseId ? 77.6245 : 77.5946,
-      });
-      if (data.success) setDriver(data.data.driver);
-    } catch (err) {
-      console.error("Toggle error:", err);
+      } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setToggling(false);
+      setLoading(false);
     }
   };
+
+  if (!user?.id) return;
+  fetchAll();
+}, [user?.id, id]);
+
+useEffect(() => {
+  return () => {
+    if (watchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(watchId);
+    }
+  };
+}, [watchId]);
+
+// Toggle online / offline
+const handleToggle = async () => {
+  if (!driver) return;
+  setToggling(true);
+  setGpsError("");
+
+  let lat = driver.warehouseId ? 12.9352 : 12.9716;
+  let lng = driver.warehouseId ? 77.6245 : 77.5946;
+
+  if (!driver.isOnline && navigator.geolocation) {
+    try {
+      const position = await getCurrentPosition();
+      lat = position.coords.latitude;
+      lng = position.coords.longitude;
+    } catch (positionError) {
+      console.warn("Unable to read initial GPS location", positionError);
+    }
+  }
+
+  try {
+    const data = await driverApi.toggleStatus({
+      driverId: driver._id,
+      isOnline: !driver.isOnline,
+      lat,
+      lng,
+    });
+
+    if (data.success) {
+      setDriver(data.data.driver);
+
+      if (!driver.isOnline) {
+        await startGeolocation();
+      } else {
+        stopGeolocation();
+      }
+    }
+  } catch (err) {
+    console.error("Toggle error:", err);
+  } finally {
+    setToggling(false);
+  }
+};
 
   if (loading) {
     return (
@@ -183,6 +278,13 @@ export default function DriverDetailPage() {
                     ? "Set offline"
                     : "Set online"}
               </button>
+              {gpsError ? (
+                <p className="text-xs text-red-600">{gpsError}</p>
+              ) : driver.isOnline ? (
+                <p className="text-xs text-green-600">
+                  GPS tracking will start if the browser allows location access.
+                </p>
+              ) : null}
             </div>
           </div>
 
