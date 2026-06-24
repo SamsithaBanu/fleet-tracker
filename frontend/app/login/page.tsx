@@ -26,7 +26,7 @@ async function onSubmit(event: any) {
       const role = data.data.user.role;
 
       if (role === "driver") {
-        router.push("/driver");
+        router.push(`/dashboard/drivers`);
       } else {
         router.push("/dashboard");
       }
