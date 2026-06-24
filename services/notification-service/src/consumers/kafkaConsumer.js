@@ -70,6 +70,7 @@ const startConsumer = async () => {
 // Each Kafka event triggers specific notifications
 export const handleEvent = async (event, data) => {
   const trackingLink = `${FRONTEND_URL}/track/${data.orderNumber}`;
+  console.log('event', event)
 
   switch (event) {
     // Order was created and driver auto-assigned
