@@ -19,12 +19,7 @@ const app = express()
 const PORT = process.env.PORT || 3012
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'https://fleet-tracker-7lct55neo-samsithabanus-projects.vercel.app'
-  ],
+  origin: '*',
   credentials: true
 }));
 

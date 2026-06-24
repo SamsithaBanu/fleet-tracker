@@ -20,12 +20,7 @@ const PORT = process.env.PORT || 3004
 
 // ── CORS — add this BEFORE other middleware ───
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'https://fleet-tracker-7lct55neo-samsithabanus-projects.vercel.app'
-  ],
+  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
