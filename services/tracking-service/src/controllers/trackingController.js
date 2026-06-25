@@ -9,7 +9,7 @@ export const updateLocation = async (req, res) => {
   try {
     const { driverId, lat, lng, speed = 0, orderId = null } = req.body
 
-    if (!driverId || !lat || !lng) {
+    if (!driverId || lat == null || lng == null) {
       return res.status(400).json({
         success: false,
         message: 'driverId, lat and lng are required'

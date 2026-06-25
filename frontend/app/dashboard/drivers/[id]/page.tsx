@@ -1,7 +1,7 @@
 // frontend/app/dashboard/drivers/[id]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { driverApi, trackingApi } from "@/lib/orderApi";
@@ -91,7 +91,7 @@ export default function DriverDetailPage() {
     }
   };
 
-  const startGeolocation = async () => {
+  const startGeolocation = useCallback(async () => {
     if (!navigator.geolocation || !driver) {
       setGpsError("Browser GPS is not available.");
       return;
@@ -125,7 +125,7 @@ export default function DriverDetailPage() {
 
     setWatchId(id);
     setGpsActive(true);
-  };
+  }, [driver]);
 
   useEffect(() => {
     const fetchAll = async () => {  
@@ -151,6 +151,16 @@ export default function DriverDetailPage() {
 }, [user?.id, id]);
 
 useEffect(() => {
+  if (!driver?.isOnline || gpsActive) return
+
+  const timer = window.setTimeout(() => {
+    startGeolocation()
+  }, 0)
+
+  return () => window.clearTimeout(timer)
+}, [driver?.isOnline, gpsActive, startGeolocation]);
+
+useEffect(() => {
   return () => {
     if (watchId !== null && navigator.geolocation) {
       navigator.geolocation.clearWatch(watchId);
@@ -174,6 +184,9 @@ const handleToggle = async () => {
       lng = position.coords.longitude;
     } catch (positionError) {
       console.warn("Unable to read initial GPS location", positionError);
+      setGpsError(
+        "Unable to read initial GPS. Using fallback start coordinates."
+      );
     }
   }
 
