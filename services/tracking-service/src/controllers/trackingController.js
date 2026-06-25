@@ -25,6 +25,10 @@ export const updateLocation = async (req, res) => {
       timestamp: Date.now(),
     }
 
+    console.log(
+      `📡 Tracking update for ${driverId}: ${locationData.lat}, ${locationData.lng}`
+    )
+
     // Save to Redis (30s TTL)
     await redis.setex(
       `driver:${driverId}:location`,
