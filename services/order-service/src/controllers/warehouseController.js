@@ -85,21 +85,15 @@ export const seedWarehouses = async (req, res) => {
 
         await Warehouse.insertMany([
             {
-                name: 'Koramangala Warehouse',
-                address: '5th Block, Koramangala, Bengaluru, Karnataka 560095',
-                location: { lat: 12.9352, lng: 77.6245 },
+                name: 'Bagalur Warehouse',
+                address: '5th street, Kattigenahalli,Bagalur Bengaluru, Karnataka 560095',
+                location: { lat: 13.12376, lng: 77.61637 },
                 city: 'Bangalore',
             },
             {
-                name: 'Indiranagar Warehouse',
-                address: '12th Main, Indiranagar, Bengaluru, Karnataka 560038',
-                location: { lat: 12.9784, lng: 77.6408 },
-                city: 'Bangalore',
-            },
-            {
-                name: 'Whitefield Warehouse',
-                address: 'ITPL Road, Whitefield, Bengaluru, Karnataka 560066',
-                location: { lat: 12.9698, lng: 77.7500 },
+                name: 'Devanahalli Warehouse',
+                address: '12th Main Street, near airport, Devanahalli, Bengaluru, Karnataka 560038',
+                location: { lat: 13.2417, lng: 77.7137 },
                 city: 'Bangalore',
             },
         ])
