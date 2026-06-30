@@ -62,12 +62,9 @@ export default function OrdersPage() {
   });
 
   const formatPhoneNumber = (phone: string): string => {
-    // Remove all spaces, dashes, parentheses
     let cleaned = phone.replace(/[\s\-\(\)]/g, "");
 
-    // If it doesn't start with +, add +91 (India)
     if (!cleaned.startsWith("+")) {
-      // Remove leading 0 if present
       cleaned = cleaned.replace(/^0/, "");
       cleaned = `+91${cleaned}`;
     }
@@ -163,21 +160,17 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Orders</h2>
+          <h2 className="text-lg md:text-xl font-bold text-gray-900">Orders</h2>
         </div>
-
-        <div className="flex items-center gap-4">
-          {/* Search */}
-          <div className="relative w-[300px]">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-[260px] md:w-[300px]">
             <Search
               className="absolute left-3 top-1/2
               -translate-y-1/2 h-4 w-4 text-[#088395]/60"
             />
-
             <Input
               type="text"
               placeholder="Search orders..."
@@ -188,84 +181,130 @@ export default function OrdersPage() {
               text-sm placeholder:text-gray-400 rounded-xl"
             />
           </div>
-
-          {/* Filter */}
-          <div className="w-[220px]">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Filter status" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-
-                {STATUSES.map((status) => (
-                  <SelectItem value={status.value} key={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 sm:w-[170px] md:w-[220px]">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Filter status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {STATUSES.map((status) => (
+                    <SelectItem value={status.value} key={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddOrder(true)}
+              className="flex items-center gap-1.5
+              text-[#088395] border-[#088395]/20
+              bg-[#088395]/5 hover:bg-[#088395]/10
+              rounded-full px-4 py-1.5
+              font-semibold text-xs whitespace-nowrap shrink-0"
+            >
+              + Add Order
+            </Button>
           </div>
-
-          {/* Add Order */}
-          <Button
-            variant="outline"
-            onClick={() => setIsAddOrder(true)}
-            className="flex items-center gap-1.5
-            text-[#088395] border-[#088395]/20
-            bg-[#088395]/5 hover:bg-[#088395]/10
-            rounded-full px-4 py-1.5
-            font-semibold text-xs"
-          >
-            + Add Order
-          </Button>
         </div>
       </div>
-
       <Separator className="bg-[#088395]/10" />
+      <div className="md:hidden space-y-3">
+        {orders.map((order) => {
+          const status = statusConfig[order.status] ?? {
+            label: order.status,
+            className: "bg-gray-50 text-gray-600 border-gray-200",
+          };
 
-      {/* Table */}
-      <Table>
-        <TableBody>
-          {orders.map((order) => {
-            const status = statusConfig[order.status] ?? {
-              label: order.status,
-              className: "bg-gray-50 text-gray-600 border-gray-200",
-            };
+          return (
+            <div
+              key={order._id}
+              onClick={() => router.push(`/dashboard/orders/${order?._id}`)}
+              className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm active:scale-[0.99] transition-transform cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 truncate">
+                    {order.orderId}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    {order.customerName}
+                  </p>
+                </div>
+                <Badge className={`shrink-0 ${status.className}`}>
+                  {status.label}
+                </Badge>
+              </div>
 
-            return (
-              <TableRow
-                key={order._id}
-                onClick={() => router.push(`/dashboard/orders/${order?._id}`)}
-              >
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{order.orderId}</span>
+              <Separator className="my-3 bg-gray-100" />
 
-                    <span className="text-sm text-gray-500">
-                      {order.customerName}
-                    </span>
-                  </div>
-                </TableCell>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span className="truncate">
+                  {order?.warehouseId?.name || "-"}
+                </span>
+                <span className="truncate text-right">
+                  {order?.driverId?.name || "Unassigned"}
+                </span>
+              </div>
+            </div>
+          );
+        })}
 
-                <TableCell>{order?.warehouseId?.name || "-"}</TableCell>
+        {orders.length === 0 && (
+          <div className="text-center text-sm text-gray-400 py-10">
+            No orders found.
+          </div>
+        )}
+      </div>
 
-                <TableCell>{order?.driverId?.name || "Unassigned"}</TableCell>
+      {/* Desktop table (hidden below md) */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableBody>
+            {orders.map((order) => {
+              const status = statusConfig[order.status] ?? {
+                label: order.status,
+                className: "bg-gray-50 text-gray-600 border-gray-200",
+              };
 
-                <TableCell>
-                  <Badge className={status.className}>{status.label}</Badge>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+              return (
+                <TableRow
+                  key={order._id}
+                  onClick={() => router.push(`/dashboard/orders/${order?._id}`)}
+                  className="cursor-pointer"
+                >
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{order.orderId}</span>
 
-      {/* Create Order Sheet */}
+                      <span className="text-sm text-gray-500">
+                        {order.customerName}
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  <TableCell>{order?.warehouseId?.name || "-"}</TableCell>
+
+                  <TableCell>{order?.driverId?.name || "Unassigned"}</TableCell>
+
+                  <TableCell>
+                    <Badge className={status.className}>{status.label}</Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* ── Create Order Sheet ── */}
       {isAddOrder && (
         <Sheet open={isAddOrder} onOpenChange={setIsAddOrder}>
-          <SheetContent className="overflow-y-auto">
+          {/* Full width on mobile, fixed width from sm up */}
+          <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
             <SheetHeader>
               <SheetTitle>Create New Order</SheetTitle>
 
@@ -300,7 +339,7 @@ export default function OrdersPage() {
               </div>
 
               {/* Phone */}
-              <div>
+              <div className="px-4">
                 <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   Customer phone *
                 </label>
@@ -309,7 +348,7 @@ export default function OrdersPage() {
                   value={form.customerPhone}
                   onChange={handleChange}
                   required
-                  placeholder="+919876511111 dd"
+                  placeholder="+919876511111"
                   pattern="^\+[1-9]\d{1,14}$"
                   title="Enter phone with country code, e.g. +919876511111"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5
@@ -351,7 +390,8 @@ export default function OrdersPage() {
               <div className="grid gap-3 px-4">
                 <Label>GPS Coordinates</Label>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* Stack on very narrow screens, side by side from sm up */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Input
                     name="deliveryLat"
                     value={form.deliveryLat}
@@ -381,7 +421,7 @@ export default function OrdersPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="rounded-xl">
+                  <SelectTrigger className="rounded-xl w-full">
                     <SelectValue placeholder="Select warehouse" />
                   </SelectTrigger>
 
@@ -458,7 +498,7 @@ export default function OrdersPage() {
 
             <SheetFooter className="mt-6">
               <Button
-                className="bg-[#088395]
+                className="w-full sm:w-auto bg-[#088395]
                 hover:bg-[#077181]"
                 onClick={handleSubmit}
                 disabled={loading}

@@ -1,17 +1,24 @@
 'use client'
 
-import { Search, Bell, Settings } from 'lucide-react'
+import { Search, Bell, Settings, X, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-export default function TopBar() {
+export default function TopBar({onMenuClick, menuOpen}) {
   return (
     <header className="h-16 bg-white border-b border-[#088395]/15 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
       {/* Left side: Search */}
       <div className="flex items-center gap-4 flex-1 max-w-sm">
+        <button
+        className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl text-gray-500 hover:bg-[#088395]/5 hover:text-[#088395] transition-colors"
+        onClick={onMenuClick}
+        aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+      >
+        {menuOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#088395]/60 pointer-events-none" />
           <Input

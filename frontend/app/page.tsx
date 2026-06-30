@@ -220,7 +220,7 @@ export default function Home() {
           </div>
           <span className="text-sm font-medium text-gray-500">FleetTracker — built with Next.js + Node.js</span>
         </div>
-        <span className="text-xs font-bold bg-white/5 text-gray-400 border border-white/10 px-3 py-1.5 rounded-full">Phase 1 in progress</span>
+        <span className="text-xs font-bold bg-white/5 text-gray-400 border border-white/10 px-3 py-1.5 rounded-full">Phase 1 Ready</span>
       </footer>
     </div>
   );

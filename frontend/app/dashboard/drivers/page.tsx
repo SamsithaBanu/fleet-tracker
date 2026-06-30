@@ -24,7 +24,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { driverApi, orderApi, wareHouseAPi } from "@/lib/orderApi";
+import { authApi, driverApi, wareHouseAPi } from "@/lib/orderApi";
 import { useRouter } from "next/navigation";
 import { Warehouse } from "@/constants/types";
 import toast from "react-hot-toast";
@@ -51,7 +51,6 @@ export default function DriversPage() {
   });
 
   useEffect(() => {
-    // Load warehouses for filter dropdown
     wareHouseAPi.getAll().then((data) => {
       if (data.success) setWarehouses(data.data.warehouses);
     });
@@ -60,12 +59,8 @@ export default function DriversPage() {
   useEffect(() => {
     const fetchDrivers = async () => {
       setLoading(true);
-      let params = "?";
-      // if (warehouseFilter) params += `warehouseId=${warehouseFilter}&`;
-      // if (statusFilter) params += `status=${statusFilter}`;
-
+      const params = "?";
       const data = await driverApi.getAll(params);
-      console.log("data", data);
       if (data.success) setDrivers(data.data.drivers);
       setLoading(false);
     };
@@ -88,18 +83,21 @@ export default function DriversPage() {
     setLoading(true);
     setError("");
 
-    console.log("FORM DATA:", form);
-
     try {
       const data = await driverApi.add(form);
 
-      console.log("API RESPONSE:", data);
+      const registerData = await authApi.register({
+        name: form?.name,
+        email: form?.email,
+        phone: form?.phone,
+        password: "123456",
+        role: "driver", // Default role
+      });
 
       if (data.success) {
         toast.success("Driver added successfully");
         setIsAddDriver(false);
 
-        // Refresh drivers list
         const driversData = await driverApi.getAll("?");
         if (driversData.success) {
           setDrivers(driversData.data.drivers);
@@ -128,105 +126,159 @@ export default function DriversPage() {
 
   return (
     <ProtectedRoute allowedRoles={["admin", "superadmin", "driver"]}>
-      <div className="space-y-5">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 md:space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Drivers</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+              Drivers
+            </h2>
           </div>
-
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative w-[300px]">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-[260px] md:w-[300px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#088395]/60" />
-
               <Input
                 type="text"
                 placeholder="Search drivers..."
                 className="pl-9 bg-[#088395]/5 border-[#088395]/15 focus-visible:border-[#088395]/40 focus-visible:ring-[#088395]/15 text-sm placeholder:text-gray-400 rounded-xl"
               />
             </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 sm:w-[180px] md:w-[220px]">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value)}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
 
-            {/* Filter */}
-            <div className="w-[220px]">
-              <Select
-                value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value)}
+                  <SelectContent>
+                    <SelectItem value="all">All Drivers</SelectItem>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="offline">Offline</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddDriver(true)}
+                className="flex items-center gap-1.5 text-[#088395] border-[#088395]/20 bg-[#088395]/5 hover:bg-[#088395]/10 rounded-full px-4 py-1.5 font-semibold text-xs disabled:opacity-40 whitespace-nowrap shrink-0"
               >
-                <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="Filter status" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="all">All Drivers</SelectItem>
-
-                  <SelectItem value="online">Online</SelectItem>
-
-                  <SelectItem value="offline">Offline</SelectItem>
-                </SelectContent>
-              </Select>
+                + Add Driver
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddDriver(true)}
-              className="flex items-center gap-1.5 text-[#088395] border-[#088395]/20 bg-[#088395]/5 hover:bg-[#088395]/10 rounded-full px-4 py-1.5 font-semibold text-xs disabled:opacity-40"
-            >
-              + Add Driver
-            </Button>
           </div>
         </div>
-
         <Separator className="bg-[#088395]/10" />
-        <Table>
-          <TableBody>
-            {drivers.map((driver) => {
-              const currentStatus = driver.isOnline ? "online" : "offline";
-
-              const status = statusConfig[currentStatus] ?? {
-                label: currentStatus,
-                className: "bg-gray-50 text-gray-600 border-gray-200",
-              };
-              return (
-                <TableRow key={driver._id} onClick={()=>router.push(`/dashboard/drivers/${driver?._id}`)}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {driver.name.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{driver.name}</span>
+        <div className="md:hidden space-y-3">
+          {drivers.map((driver) => {
+            const currentStatus = driver.isOnline ? "online" : "offline";
+            const status = statusConfig[currentStatus] ?? {
+              label: currentStatus,
+              className: "bg-gray-50 text-gray-600 border-gray-200",
+            };
+            return (
+              <div
+                key={driver._id}
+                onClick={() => router.push(`/dashboard/drivers/${driver?._id}`)}
+                className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm active:scale-[0.99] transition-transform cursor-pointer"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="shrink-0">
+                      <AvatarFallback>
+                        {driver.name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {driver.name}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {driver.warehouseId?.name}
+                      </p>
                     </div>
-                  </TableCell>
+                  </div>
+                  <Badge className={`shrink-0 ${status.className}`}>
+                    {driver?.isOnline ? "Online" : "Offline"}
+                  </Badge>
+                </div>
+                <Separator className="my-3 bg-gray-100" />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-500">
+                    {driver.totalDeliveries} deliveries
+                  </span>
+                  <div className="flex items-center gap-1 text-gray-700 font-medium">
+                    <Star className="h-3.5 w-3.5" />
+                    {driver.rating}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {drivers.length === 0 && (
+            <div className="text-center text-sm text-gray-400 py-10">
+              No drivers found.
+            </div>
+          )}
+        </div>
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableBody>
+              {drivers.map((driver) => {
+                const currentStatus = driver.isOnline ? "online" : "offline";
+                const status = statusConfig[currentStatus] ?? {
+                  label: currentStatus,
+                  className: "bg-gray-50 text-gray-600 border-gray-200",
+                };
+                return (
+                  <TableRow
+                    key={driver._id}
+                    onClick={() =>
+                      router.push(`/dashboard/drivers/${driver?._id}`)
+                    }
+                    className="cursor-pointer"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>
+                            {driver.name.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{driver.name}</span>
+                      </div>
+                    </TableCell>
 
-                  <TableCell className="pl-12">
-                    {driver.warehouseId?.name}
-                  </TableCell>
+                    <TableCell className="pl-12">
+                      {driver.warehouseId?.name}
+                    </TableCell>
 
-                  <TableCell>
-                    <Badge className={status.className}>
-                      {driver?.isOnline ? "Online" : "Offline"}
-                    </Badge>
-                  </TableCell>
+                    <TableCell>
+                      <Badge className={status.className}>
+                        {driver?.isOnline ? "Online" : "Offline"}
+                      </Badge>
+                    </TableCell>
 
-                  <TableCell className="text-gray-600">
-                    {driver.totalDeliveries} del
-                  </TableCell>
+                    <TableCell className="text-gray-600">
+                      {driver.totalDeliveries} del
+                    </TableCell>
 
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4" />
-                      {driver.rating}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4" />
+                        {driver.rating}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
         {isAddDriver && (
           <Sheet open={isAddDriver} onOpenChange={setIsAddDriver}>
-            <SheetContent>
+            <SheetContent className="w-full sm:max-w-[420px] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Add Driver</SheetTitle>
                 <SheetDescription>
@@ -247,8 +299,7 @@ export default function DriversPage() {
                   />
                 </div>
                 <div className="grid gap-3 px-4">
-                  <Label htmlFor="warehouse">Phone Number</Label>
-
+                  <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -259,8 +310,7 @@ export default function DriversPage() {
                   />
                 </div>
                 <div className="grid gap-3 px-4">
-                  <Label htmlFor="warehouse">Email</Label>
-
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     name="email"
@@ -272,8 +322,7 @@ export default function DriversPage() {
                   />
                 </div>
                 <div className="grid gap-3 px-4">
-                  <Label htmlFor="license">License Number</Label>
-
+                  <Label htmlFor="licenseNumber">License Number</Label>
                   <Input
                     id="licenseNumber"
                     name="licenseNumber"
@@ -295,7 +344,8 @@ export default function DriversPage() {
                       }))
                     }
                   >
-                    <SelectTrigger className="rounded-xl w-[360px]">
+                    {/* Full width within sheet, instead of fixed 360px */}
+                    <SelectTrigger className="rounded-xl w-full">
                       <SelectValue placeholder="Select warehouse" />
                     </SelectTrigger>
 
@@ -311,7 +361,7 @@ export default function DriversPage() {
               </div>
               <SheetFooter>
                 <Button
-                  className="p-6 bg-[#088395]"
+                  className="w-full sm:w-auto p-6 bg-[#088395]"
                   onClick={handleSubmit}
                   disabled={loading}
                 >

@@ -13,7 +13,7 @@ const LiveMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[560px] bg-gray-100 rounded-xl flex items-center
+      <div className="h-[360px] md:h-[560px] bg-gray-100 rounded-xl flex items-center
         justify-center text-gray-400 text-sm">
         Loading map...
       </div>
@@ -130,13 +130,13 @@ export default function MapPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      {/* ── Header ── */}
+      <div className="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-lg md:text-xl font-semibold text-gray-900">
             Live map · Bangalore
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-400 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             {connected ? (
               <span className="text-green-600">
                 🟢 Connected — receiving live GPS
@@ -147,36 +147,37 @@ export default function MapPage() {
               </span>
             )}
             {lastUpdate && (
-              <span className="ml-2 text-gray-400">
+              <span className="text-gray-400">
                 Last update: {lastUpdate}
               </span>
             )}
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="flex gap-3 text-xs">
+        {/* Stats — horizontal scroll on mobile, wraps from sm up */}
+        <div className="flex gap-2 sm:gap-3 text-xs overflow-x-auto pb-1 -mx-1 px-1
+          sm:overflow-visible sm:flex-wrap sm:pb-0">
           <div className="bg-blue-50 border border-blue-100 rounded-lg
-            px-3 py-1.5 text-blue-700">
+            px-3 py-1.5 text-blue-700 whitespace-nowrap shrink-0">
             🏪 {warehouses.length} warehouses
           </div>
           <div className="bg-green-50 border border-green-100 rounded-lg
-            px-3 py-1.5 text-green-700">
+            px-3 py-1.5 text-green-700 whitespace-nowrap shrink-0">
             🛵 {driversArray.length} drivers live
           </div>
           <div className="bg-yellow-50 border border-green-100 rounded-lg
-            px-3 py-1.5 text-green-700">
+            px-3 py-1.5 text-green-700 whitespace-nowrap shrink-0">
             🛵 {orders.length} orders live
           </div>
         </div>
       </div>
 
-      {/* Map */}
+      {/* Map — shorter on mobile to fit viewport */}
       <LiveMap
         warehouses={warehouses}
         drivers={driversArray}
         orders={orders}
-        height="560px"
+        height="360px"
       />
 
       {/* Live driver list */}
@@ -197,20 +198,21 @@ export default function MapPage() {
                 <div className="w-2 h-2 rounded-full bg-green-500
                   animate-pulse flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 truncate">
                     {driver.name}
                   </p>
                   <p className="text-xs text-gray-400">
                     {driver.lat.toFixed(4)}, {driver.lng.toFixed(4)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xs text-gray-500">
+                {/* Speed + delivery badge: stack on mobile, row from sm up */}
+                <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-2 flex-shrink-0">
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
                     {driver.speed} km/h
                   </span>
                   {driver.orderId && (
                     <span className="text-xs bg-amber-100 text-amber-700
-                      px-2 py-0.5 rounded-full font-medium">
+                      px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
                       On delivery
                     </span>
                   )}
@@ -221,7 +223,7 @@ export default function MapPage() {
         </div>
       ) : (
         <div className="mt-4 bg-white border border-gray-200 rounded-xl
-          p-8 text-center">
+          p-6 md:p-8 text-center">
           <p className="text-2xl mb-2">🛵</p>
           <p className="text-sm font-medium text-gray-700">
             No drivers online yet
@@ -230,7 +232,8 @@ export default function MapPage() {
             Start the GPS simulator to see drivers appear on the map
           </p>
           <code className="block mt-3 text-xs bg-gray-50 border
-            border-gray-200 rounded-lg px-4 py-2 text-gray-600">
+            border-gray-200 rounded-lg px-4 py-2 text-gray-600
+            overflow-x-auto whitespace-nowrap">
             node tools/gps-simulator.js driver-001
           </code>
         </div>

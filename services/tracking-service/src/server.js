@@ -19,10 +19,19 @@ const PORT = process.env.PORT || 3003;
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:3000",
+      process.env.FRONTEND_URL_PROD || "https://fleet-tracker-cjun4ed3s-samsithabanus-projects.vercel.app",
+      "http://localhost:3001",
+      "http://localhost:3002",
+    ],
     methods: ["GET", "POST"],
+    credentials: true,
   },
   pingTimeout: 60000,
+  pingInterval: 25000,
+  allowEIO3: true,
+  transports: ["websocket", "polling"],
 });
 
 initSocket(io); // initialize socket handlers

@@ -13,7 +13,9 @@ export const NOTIFICATION_BASE =
   process.env.NEXT_PUBLIC_NOTIFICATION_BASE || 'http://localhost:3004'
 
 export const SOCKET_URL =
-  process.env.NEXT_PUBLIC_TRACKING_BASE || 'http://localhost:3003'
+  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  process.env.NEXT_PUBLIC_TRACKING_BASE ||
+  'http://localhost:3003'
   
 export const getAuthHeader = () => {
   const token = localStorage.getItem("accessToken");
