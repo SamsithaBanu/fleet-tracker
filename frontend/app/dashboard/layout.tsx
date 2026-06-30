@@ -52,7 +52,7 @@ export default function DashboardLayout({
   }, [railOpen]);
 
   return (
-    <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+    <ProtectedRoute allowedRoles={["admin", "superadmin","driver"]}>
       <div className="flex h-screen bg-[#f0f9fa] relative overflow-hidden">
         <aside className="hidden md:flex w-64 bg-white border-r border-[#088395]/15 flex-col shadow-sm flex-shrink-0">
           <div className="p-5 border-b border-[#088395]/10">
