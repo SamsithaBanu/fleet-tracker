@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-export default function TopBar({onMenuClick, menuOpen}) {
+export default function TopBar({ onMenuClick, menuOpen }: { onMenuClick: () => void; menuOpen: boolean }) {
   return (
     <header className="h-16 bg-white border-b border-[#088395]/15 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
       {/* Left side: Search */}
