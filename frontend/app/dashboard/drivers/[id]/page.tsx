@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { getFcmToken } from "@/lib/firebase";
 import { driverApi, trackingApi } from "@/lib/orderApi";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/authContext";
@@ -61,6 +62,7 @@ export default function DriverDetailPage() {
   const [gpsError, setGpsError] = useState("");
   const [watchId, setWatchId] = useState<number | null>(null);
   const [gpsActive, setGpsActive] = useState(false);
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [todayDelivery, setTotalDelivery] = useState<Order[]>([]);
 
   const { user } = useAuth();
@@ -190,12 +192,25 @@ const handleToggle = async () => {
     }
   }
 
+  let requestedFcmToken = fcmToken;
+  if (!requestedFcmToken) {
+    try {
+      requestedFcmToken = await getFcmToken();
+      if (requestedFcmToken) {
+        setFcmToken(requestedFcmToken);
+      }
+    } catch (tokenError) {
+      console.warn("Unable to retrieve FCM token", tokenError);
+    }
+  }
+
   try {
     const data = await driverApi.toggleStatus({
       driverId: driver._id,
       isOnline: !driver.isOnline,
       lat,
       lng,
+      ...(requestedFcmToken ? { fcmToken: requestedFcmToken } : {}),
     });
 
     if (data.success) {

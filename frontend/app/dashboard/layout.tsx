@@ -15,6 +15,7 @@ import { ProtectedRoute } from "../../components/ProtectedRoute";
 import { FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { notificationApi } from "@/lib/orderApi";
 
 export default function DashboardLayout({
   children,
@@ -25,6 +26,7 @@ export default function DashboardLayout({
   const { user, logout } = useAuth();
   const router = useRouter();
   const [railOpen, setRailOpen] = useState<boolean>(false);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
   const railRef = useRef<HTMLDivElement>(null);
 
   // Close rail on Escape key
@@ -50,6 +52,26 @@ export default function DashboardLayout({
       document.body.style.overflow = "";
     };
   }, [railOpen]);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (!user) return
+      const query = user.role === 'driver' ? `?driverId=${encodeURIComponent(user.id)}&role=driver` : ''
+      try {
+        const res = await notificationApi.getAll(query)
+        if (res.success) {
+          const unread = (res.data.notifications || []).filter((n: any) => n.status === 'unread').length
+          setNotificationCount(unread)
+        }
+      } catch (err) {
+        console.error('Notification count fetch failed:', err)
+      }
+    }
+
+    fetchCount()
+    const interval = window.setInterval(fetchCount, 15000)
+    return () => window.clearInterval(interval)
+  }, [user])
 
   return (
     <ProtectedRoute allowedRoles={["admin", "superadmin","driver"]}>
@@ -105,9 +127,9 @@ export default function DashboardLayout({
                         {item.icon}
                       </span>
                       {item.label}
-                      {item.label === "Notifications" && (
+                      {item.label === "Notifications" && notificationCount > 0 && (
                         <Badge className="ml-auto h-4 min-w-4 px-1 text-[10px] bg-red-500 hover:bg-red-500 text-white rounded-full">
-                          3
+                          {notificationCount > 9 ? '9+' : notificationCount}
                         </Badge>
                       )}
                     </Link>
@@ -295,6 +317,7 @@ export default function DashboardLayout({
           <TopBar
             onMenuClick={() => setRailOpen((prev) => !prev)}
             menuOpen={railOpen}
+            unreadCount={notificationCount}
           />
           <main className="flex-1 overflow-auto">
             <div className="p-4 md:p-8">{children}</div>

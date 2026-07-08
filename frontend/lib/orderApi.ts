@@ -196,7 +196,7 @@ export const trackingApi = {
 };
 
 export const notificationApi = {
-  getAll: () => request(NOTIFICATION_BASE, "/notifications"),
+  getAll: (params = "") => request(NOTIFICATION_BASE, `/notifications${params}`),
   markRead: (id: string) =>
     request(NOTIFICATION_BASE, `/notifications/${id}/read`, { method: "PUT" }),
   markAllRead: () =>

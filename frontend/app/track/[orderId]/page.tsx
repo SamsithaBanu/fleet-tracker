@@ -137,7 +137,7 @@ export default function TrackOrderPage() {
       <div className="bg-green-600 text-white px-4 py-4">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-lg">🛒</span>
-          <span className="font-semibold">QuickDeliver</span>
+          <span className="font-semibold">Fleet Deliver</span>
         </div>
         <p className="text-green-100 text-sm">
           Tracking order #{order.orderId}

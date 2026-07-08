@@ -2,7 +2,15 @@ import Notification from "../model /Notification.js"
 
 export const getAllNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find()
+    const { driverId, role } = req.query
+    const filter = {}
+
+    if (role === 'driver' && driverId) {
+      filter.driverId = driverId
+    }
+
+    // Admin and superadmin receive all notifications
+    const notifications = await Notification.find(filter)
       .sort({ createdAt: -1 })
       .limit(50)
 

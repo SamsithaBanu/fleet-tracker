@@ -7,6 +7,7 @@ import { Bell, Package, CheckCircle2, Clock, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { notificationApi } from '@/lib/orderApi'
+import { useAuth } from '@/lib/authContext'
 
 interface NotificationItem {
   _id: string
@@ -46,24 +47,28 @@ const formatDate = (iso: string) => {
 }
 
 export default function NotificationsPage() {
+  const { user } = useAuth()
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
 
-const fetchNotifications = async () => {
-  try {
-    const data = await notificationApi.getAll();
+  const fetchNotifications = async () => {
+    try {
+      const query = user?.role === 'driver' ? `?driverId=${encodeURIComponent(user.id)}&role=driver` : ''
+      const data = await notificationApi.getAll(query)
 
-    if (data.success) {
-      setNotifications(data.data.notifications);
+      if (data.success) {
+        setNotifications(data.data.notifications)
+      }
+    } catch (err) {
+      console.error('Notification fetch error:', err)
+    } finally {
+      setLoading(false)
     }
-  } catch (err) {
-    console.error("Notification fetch error:", err);
-  } finally {
-    setLoading(false);
   }
-};
 
 useEffect(() => {
+  if (!user) return;
+
   const loadNotifications = async () => {
     await fetchNotifications();
   };
@@ -73,7 +78,7 @@ useEffect(() => {
   const interval = setInterval(loadNotifications, 15000);
 
   return () => clearInterval(interval);
-}, []);
+}, [user]);
 
   const unreadCount = notifications.filter(n => n.status === 'unread').length
 

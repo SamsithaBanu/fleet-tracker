@@ -7,7 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
-export default function TopBar({ onMenuClick, menuOpen }: { onMenuClick: () => void; menuOpen: boolean }) {
+interface TopBarProps {
+  onMenuClick: () => void
+  menuOpen: boolean
+  unreadCount?: number
+}
+
+export default function TopBar({ onMenuClick, menuOpen, unreadCount = 0 }: TopBarProps) {
   return (
     <header className="h-16 bg-white border-b border-[#088395]/15 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
       {/* Left side: Search */}
@@ -50,7 +56,13 @@ export default function TopBar({ onMenuClick, menuOpen }: { onMenuClick: () => v
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 border-2 border-white rounded-full" />
+              {unreadCount > 0 ? (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-red-500 text-[10px] font-semibold text-white h-5 min-w-[1.25rem] px-1.5">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              ) : (
+                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 border-2 border-white rounded-full" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">Notifications</TooltipContent>
