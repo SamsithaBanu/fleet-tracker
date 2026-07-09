@@ -16,6 +16,7 @@ import { FiLogOut } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { notificationApi } from "@/lib/orderApi";
+import { setupForegroundNotifications } from "@/lib/firebase";
 
 export default function DashboardLayout({
   children,
@@ -28,6 +29,11 @@ export default function DashboardLayout({
   const [railOpen, setRailOpen] = useState<boolean>(false);
   const [notificationCount, setNotificationCount] = useState<number>(0);
   const railRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Set up foreground push notifications for the whole dashboard
+    setupForegroundNotifications();
+  }, []);
 
   // Close rail on Escape key
   useEffect(() => {
@@ -55,26 +61,31 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const fetchCount = async () => {
-      if (!user) return
-      const query = user.role === 'driver' ? `?driverId=${encodeURIComponent(user.id)}&role=driver` : ''
+      if (!user) return;
+      const query =
+        user.role === "driver"
+          ? `?driverId=${encodeURIComponent(user.id)}&role=driver`
+          : "";
       try {
-        const res = await notificationApi.getAll(query)
+        const res = await notificationApi.getAll(query);
         if (res.success) {
-          const unread = (res.data.notifications || []).filter((n: any) => n.status === 'unread').length
-          setNotificationCount(unread)
+          const unread = (res.data.notifications || []).filter(
+            (n: any) => n.status === "unread",
+          ).length;
+          setNotificationCount(unread);
         }
       } catch (err) {
-        console.error('Notification count fetch failed:', err)
+        console.error("Notification count fetch failed:", err);
       }
-    }
+    };
 
-    fetchCount()
-    const interval = window.setInterval(fetchCount, 15000)
-    return () => window.clearInterval(interval)
-  }, [user])
+    fetchCount();
+    const interval = window.setInterval(fetchCount, 15000);
+    return () => window.clearInterval(interval);
+  }, [user]);
 
   return (
-    <ProtectedRoute allowedRoles={["admin", "superadmin","driver"]}>
+    <ProtectedRoute allowedRoles={["admin", "superadmin", "driver"]}>
       <div className="flex h-screen bg-[#f0f9fa] relative overflow-hidden">
         <aside className="hidden md:flex w-64 bg-white border-r border-[#088395]/15 flex-col shadow-sm flex-shrink-0">
           <div className="p-5 border-b border-[#088395]/10">
@@ -127,11 +138,12 @@ export default function DashboardLayout({
                         {item.icon}
                       </span>
                       {item.label}
-                      {item.label === "Notifications" && notificationCount > 0 && (
-                        <Badge className="ml-auto h-4 min-w-4 px-1 text-[10px] bg-red-500 hover:bg-red-500 text-white rounded-full">
-                          {notificationCount > 9 ? '9+' : notificationCount}
-                        </Badge>
-                      )}
+                      {item.label === "Notifications" &&
+                        notificationCount > 0 && (
+                          <Badge className="ml-auto h-4 min-w-4 px-1 text-[10px] bg-red-500 hover:bg-red-500 text-white rounded-full">
+                            {notificationCount > 9 ? "9+" : notificationCount}
+                          </Badge>
+                        )}
                     </Link>
                   </TooltipTrigger>
                   <TooltipContent side="right">{item.label}</TooltipContent>
