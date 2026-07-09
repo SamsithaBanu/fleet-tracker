@@ -78,6 +78,23 @@ export default function DriverDetailPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Add this useEffect in driver detail page
+useEffect(() => {
+  if (typeof window === 'undefined') return
+
+  const setupNotifications = async () => {
+    try {
+      const { setupForegroundNotifications } = await import('@/lib/firebase')
+      await setupForegroundNotifications()
+      console.log('🔔 Foreground notifications ready')
+    } catch (err) {
+      console.warn('Foreground notification setup failed:', err)
+    }
+  }
+
+  setupNotifications()
+}, [])
+
   const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -207,66 +224,76 @@ export default function DriverDetailPage() {
     }
   };
 
-  // Toggle online / offline
-  const handleToggle = async () => {
-    if (!driver) return;
-    setToggling(true);
-    setGpsError("");
+const handleToggle = async () => {
+  if (!driver) return
+  setToggling(true)
+  setGpsError('')
 
-    let lat = driver.warehouseId ? 12.9352 : 12.9716;
-    let lng = driver.warehouseId ? 77.6245 : 77.5946;
+  // Step 1 — Request notification permission on mobile
+  // Must happen from user gesture (button tap) ✅
+  let requestedFcmToken = fcmToken
 
-    if (!driver.isOnline && navigator.geolocation) {
-      try {
-        const position = await getCurrentPosition();
-        lat = position.coords.latitude;
-        lng = position.coords.longitude;
-      } catch (positionError) {
-        console.warn("Unable to read initial GPS location", positionError);
-        setGpsError(
-          "Unable to read initial GPS. Using fallback start coordinates.",
-        );
-      }
-    }
-
-    let requestedFcmToken = fcmToken;
-    console.log("Current FCM Token:", requestedFcmToken, fcmToken);
-    if (!requestedFcmToken) {
-      try {
-        const { getFcmToken } = await import("@/lib/firebase");
-        requestedFcmToken = await getFcmToken();
-        if (requestedFcmToken) {
-          setFcmToken(requestedFcmToken);
-        }
-      } catch (tokenError) {
-        console.warn("Unable to retrieve FCM token", tokenError);
-      }
-    }
-
+  if (!requestedFcmToken && 'Notification' in window) {
     try {
-      const data = await driverApi.toggleStatus({
-        driverId: driver._id,
-        isOnline: !driver.isOnline,
-        lat,
-        lng,
-        ...(requestedFcmToken ? { fcmToken: requestedFcmToken } : {}),
-      });
+      // Request permission — this works on mobile because
+      // it's triggered by button tap (user gesture)
+      const permission = await Notification.requestPermission()
+      setNotifPermission(permission)
+      console.log('🔔 Permission:', permission)
 
-      if (data.success) {
-        setDriver(data.data.driver);
-
-        if (!driver.isOnline) {
-          await startGeolocation();
-        } else {
-          stopGeolocation();
+      if (permission === 'granted') {
+        const { getFcmToken } = await import('@/lib/firebase')
+        requestedFcmToken = await getFcmToken()
+        if (requestedFcmToken) {
+          setFcmToken(requestedFcmToken)
+          console.log('✅ FCM token obtained:', requestedFcmToken.slice(0, 20) + '...')
         }
       }
     } catch (err) {
-      console.error("Toggle error:", err);
-    } finally {
-      setToggling(false);
+      console.warn('Notification permission error:', err)
     }
-  };
+  }
+
+  // Step 2 — Get GPS location
+  let lat = driver.warehouseId ? 12.9352 : 12.9716
+  let lng = driver.warehouseId ? 77.6245 : 77.5946
+
+  if (!driver.isOnline && navigator.geolocation) {
+    try {
+      const position = await getCurrentPosition()
+      lat = position.coords.latitude
+      lng = position.coords.longitude
+    } catch {
+      console.warn('GPS fallback to warehouse coordinates')
+    }
+  }
+
+  // Step 3 — Toggle online/offline with FCM token
+  try {
+    const data = await driverApi.toggleStatus({
+      driverId: driver._id,
+      isOnline: !driver.isOnline,
+      lat,
+      lng,
+      ...(requestedFcmToken ? { fcmToken: requestedFcmToken } : {}),
+    })
+
+    if (data.success) {
+      setDriver(data.data.driver)
+      console.log('✅ Driver status updated, fcmToken saved:', !!requestedFcmToken)
+
+      if (!driver.isOnline) {
+        await startGeolocation()
+      } else {
+        stopGeolocation()
+      }
+    }
+  } catch (err) {
+    console.error('Toggle error:', err)
+  } finally {
+    setToggling(false)
+  }
+}
 
   if (loading) {
     return (
