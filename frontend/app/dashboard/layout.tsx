@@ -30,11 +30,26 @@ export default function DashboardLayout({
   const [notificationCount, setNotificationCount] = useState<number>(0);
   const railRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-    // Dynamic import inside useEffect — only runs in browser, never SSR
-    import('@/lib/firebase').then(({ setupForegroundNotifications }) => {
-      setupForegroundNotifications()
-    })
+ useEffect(() => {
+    // Request permission automatically when dashboard loads
+    const requestPermission = async () => {
+      if (typeof window === 'undefined') return
+      if (!('Notification' in window)) return
+
+      if (Notification.permission === 'default') {
+        // Small delay so it doesn't popup instantly on page load
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        const permission = await Notification.requestPermission()
+        console.log('Notification permission:', permission)
+      }
+
+      // Set up foreground notifications
+      import('@/lib/firebase').then(({ setupForegroundNotifications }) => {
+        setupForegroundNotifications()
+      })
+    }
+
+    requestPermission()
   }, [])
 
   // Close rail on Escape key

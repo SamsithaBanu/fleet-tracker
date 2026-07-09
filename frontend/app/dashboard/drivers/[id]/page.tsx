@@ -63,8 +63,20 @@ export default function DriverDetailPage() {
   const [gpsActive, setGpsActive] = useState(false);
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [todayDelivery, setTotalDelivery] = useState<Order[]>([]);
+  const [notifPermission, setNotifPermission] = useState<string>("");
 
   const { user } = useAuth();
+
+  useEffect(() => {
+    const checkPermission = () => {
+      if (typeof window === "undefined") return;
+      if (!("Notification" in window)) return;
+      setNotifPermission(Notification.permission);
+    };
+
+    const timer = setTimeout(checkPermission, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const getCurrentPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
@@ -72,15 +84,11 @@ export default function DriverDetailPage() {
         return reject(new Error("Browser does not support GPS."));
       }
 
-      navigator.geolocation.getCurrentPosition(
-        resolve,
-        reject,
-        {
-          enableHighAccuracy: true,
-          maximumAge: 5000,
-          timeout: 10000,
-        },
-      );
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 10000,
+      });
     });
   };
 
@@ -129,7 +137,7 @@ export default function DriverDetailPage() {
   }, [driver]);
 
   useEffect(() => {
-    const fetchAll = async () => {  
+    const fetchAll = async () => {
       try {
         const [driverRes, earningsRes] = await Promise.all([
           driverApi.getOne(id),
@@ -141,94 +149,124 @@ export default function DriverDetailPage() {
         } else setError("Driver not found");
         if (earningsRes.success) setEarnings(earningsRes.data);
       } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!user?.id) return;
+    fetchAll();
+  }, [user?.id, id]);
+
+  useEffect(() => {
+    if (!driver?.isOnline || gpsActive) return;
+
+    const timer = window.setTimeout(() => {
+      startGeolocation();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [driver?.isOnline, gpsActive, startGeolocation]);
+
+  useEffect(() => {
+    return () => {
+      if (watchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
+
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support notifications");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
+    console.log("Permission result:", permission);
+
+    if (permission === "granted") {
+      // Now get FCM token
+      const { getFcmToken } = await import("@/lib/firebase");
+      const token = await getFcmToken();
+      console.log("FCM token after permission grant:", token);
+
+      // Save token to driver if we have one
+      if (token && driver) {
+        await driverApi.toggleStatus({
+          driverId: driver._id,
+          isOnline: driver.isOnline,
+          lat: 12.9352,
+          lng: 77.6245,
+          fcmToken: token,
+        });
+        console.log("✅ FCM token saved to driver");
+      }
+    }
+  };
+
+  // Toggle online / offline
+  const handleToggle = async () => {
+    if (!driver) return;
+    setToggling(true);
+    setGpsError("");
+
+    let lat = driver.warehouseId ? 12.9352 : 12.9716;
+    let lng = driver.warehouseId ? 77.6245 : 77.5946;
+
+    if (!driver.isOnline && navigator.geolocation) {
+      try {
+        const position = await getCurrentPosition();
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      } catch (positionError) {
+        console.warn("Unable to read initial GPS location", positionError);
+        setGpsError(
+          "Unable to read initial GPS. Using fallback start coordinates.",
+        );
+      }
+    }
+
+    let requestedFcmToken = fcmToken;
+    console.log("Current FCM Token:", requestedFcmToken, fcmToken);
+    if (!requestedFcmToken) {
+      try {
+        const { getFcmToken } = await import("@/lib/firebase");
+        requestedFcmToken = await getFcmToken();
+        if (requestedFcmToken) {
+          setFcmToken(requestedFcmToken);
+        }
+      } catch (tokenError) {
+        console.warn("Unable to retrieve FCM token", tokenError);
+      }
+    }
+
+    try {
+      const data = await driverApi.toggleStatus({
+        driverId: driver._id,
+        isOnline: !driver.isOnline,
+        lat,
+        lng,
+        ...(requestedFcmToken ? { fcmToken: requestedFcmToken } : {}),
+      });
+
+      if (data.success) {
+        setDriver(data.data.driver);
+
+        if (!driver.isOnline) {
+          await startGeolocation();
+        } else {
+          stopGeolocation();
+        }
+      }
+    } catch (err) {
+      console.error("Toggle error:", err);
     } finally {
-      setLoading(false);
+      setToggling(false);
     }
   };
-
-  if (!user?.id) return;
-  fetchAll();
-}, [user?.id, id]);
-
-useEffect(() => {
-  if (!driver?.isOnline || gpsActive) return
-
-  const timer = window.setTimeout(() => {
-    startGeolocation()
-  }, 0)
-
-  return () => window.clearTimeout(timer)
-}, [driver?.isOnline, gpsActive, startGeolocation]);
-
-useEffect(() => {
-  return () => {
-    if (watchId !== null && navigator.geolocation) {
-      navigator.geolocation.clearWatch(watchId);
-    }
-  };
-}, [watchId]);
-
-// Toggle online / offline
-const handleToggle = async () => {
-  if (!driver) return;
-  setToggling(true);
-  setGpsError("");
-
-  let lat = driver.warehouseId ? 12.9352 : 12.9716;
-  let lng = driver.warehouseId ? 77.6245 : 77.5946;
-
-  if (!driver.isOnline && navigator.geolocation) {
-    try {
-      const position = await getCurrentPosition();
-      lat = position.coords.latitude;
-      lng = position.coords.longitude;
-    } catch (positionError) {
-      console.warn("Unable to read initial GPS location", positionError);
-      setGpsError(
-        "Unable to read initial GPS. Using fallback start coordinates."
-      );
-    }
-  }
-
-  let requestedFcmToken = fcmToken;
-  console.log("Current FCM Token:", requestedFcmToken, fcmToken);
-  if (!requestedFcmToken) {
-    try {
-      const { getFcmToken } = await import('@/lib/firebase')
-      requestedFcmToken = await getFcmToken();
-      if (requestedFcmToken) {
-        setFcmToken(requestedFcmToken);
-      }
-    } catch (tokenError) {
-      console.warn("Unable to retrieve FCM token", tokenError);
-    }
-  }
-
-  try {
-    const data = await driverApi.toggleStatus({
-      driverId: driver._id,
-      isOnline: !driver.isOnline,
-      lat,
-      lng,
-      ...(requestedFcmToken ? { fcmToken: requestedFcmToken } : {}),
-    });
-
-    if (data.success) {
-      setDriver(data.data.driver);
-
-      if (!driver.isOnline) {
-        await startGeolocation();
-      } else {
-        stopGeolocation();
-      }
-    }
-  } catch (err) {
-    console.error("Toggle error:", err);
-  } finally {
-    setToggling(false);
-  }
-};
 
   if (loading) {
     return (
@@ -310,6 +348,29 @@ const handleToggle = async () => {
                     ? "Set offline"
                     : "Set online"}
               </button>
+              {/* Add this below the online/offline toggle button */}
+              <div className="mt-2">
+                {notifPermission === "granted" ? (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    🔔 Notifications enabled
+                  </span>
+                ) : notifPermission === "denied" ? (
+                  <div className="text-xs text-red-500">
+                    <p>🔕 Notifications blocked</p>
+                    <p className="text-gray-400 mt-0.5">
+                      Reset in browser → Site settings → Notifications
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="text-xs px-3 py-1.5 rounded-lg border font-medium
+        border-blue-200 text-blue-600 hover:bg-blue-50 transition-all"
+                  >
+                    🔔 Enable notifications
+                  </button>
+                )}
+              </div>
               {gpsError ? (
                 <p className="text-xs text-red-600">{gpsError}</p>
               ) : null}
