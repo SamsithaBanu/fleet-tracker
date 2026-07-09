@@ -193,6 +193,7 @@ const handleToggle = async () => {
   }
 
   let requestedFcmToken = fcmToken;
+  console.log("Current FCM Token:", requestedFcmToken, fcmToken);
   if (!requestedFcmToken) {
     try {
       requestedFcmToken = await getFcmToken();

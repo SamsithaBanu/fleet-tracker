@@ -45,6 +45,7 @@ export const getFcmToken = async (): Promise<string | null> => {
       vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || undefined,
       serviceWorkerRegistration: registration,
     });
+    console.log("FCM Token:", token);
     return token || null;
   } catch (error) {
     console.error("Unable to get FCM token:", error);
