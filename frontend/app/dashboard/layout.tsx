@@ -30,10 +30,12 @@ export default function DashboardLayout({
   const [notificationCount, setNotificationCount] = useState<number>(0);
   const railRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Set up foreground push notifications for the whole dashboard
-    setupForegroundNotifications();
-  }, []);
+useEffect(() => {
+    // Dynamic import inside useEffect — only runs in browser, never SSR
+    import('@/lib/firebase').then(({ setupForegroundNotifications }) => {
+      setupForegroundNotifications()
+    })
+  }, [])
 
   // Close rail on Escape key
   useEffect(() => {

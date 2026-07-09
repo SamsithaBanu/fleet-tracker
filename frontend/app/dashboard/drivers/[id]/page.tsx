@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getFcmToken } from "@/lib/firebase";
 import { driverApi, trackingApi } from "@/lib/orderApi";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/lib/authContext";
@@ -196,6 +195,7 @@ const handleToggle = async () => {
   console.log("Current FCM Token:", requestedFcmToken, fcmToken);
   if (!requestedFcmToken) {
     try {
+      const { getFcmToken } = await import('@/lib/firebase')
       requestedFcmToken = await getFcmToken();
       if (requestedFcmToken) {
         setFcmToken(requestedFcmToken);
