@@ -52,6 +52,18 @@ const sendPushNotification = async (fcmToken, title, body, data = {}) => {
         // All data values must be strings for FCM
         timestamp: String(Date.now()),
       },
+      // Web push config — required for browser/PWA notifications
+      webpush: {
+        notification: {
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          requireInteraction: true,
+          vibrate: [200, 100, 200],
+        },
+        fcmOptions: {
+          link: '/dashboard/notifications',
+        },
+      },
       android: {
         priority: 'high',
         notification: {
