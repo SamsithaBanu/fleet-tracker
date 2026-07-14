@@ -367,6 +367,7 @@ export const markFailed = async (req, res) => {
     await notifyOrderEvent("order.failed", {
       orderId: order._id.toString(),
       orderNumber: order.orderId,
+      driverId: order.driverId?.toString(),
       customerPhone: order.customer.phone,
       // customerName: order.customer.name,
       reason: order.failReason,

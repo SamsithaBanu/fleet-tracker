@@ -101,7 +101,7 @@ export const setupForegroundNotifications = async () => {
         new Notification(title, {
           body,
           icon: '/favicon.ico',
-          tag: 'fleet-notification',
+          tag: `fleet-notification-${Date.now()}`,
         })
       }
     })

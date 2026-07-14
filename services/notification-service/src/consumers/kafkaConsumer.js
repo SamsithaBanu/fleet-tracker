@@ -125,6 +125,7 @@ export const handleEvent = async (event, data) => {
         title: "Order Picked Up",
         description: `Order ${data.orderNumber} picked up from warehouse`,
         orderId: data.orderNumber,
+        driverId: data.driverId,
         type: "order_picked_up",
         status: "unread",
       });
@@ -145,6 +146,7 @@ export const handleEvent = async (event, data) => {
         title: "Order Delivered",
         description: `Order ${data.orderNumber} delivered successfully`,
         orderId: data.orderNumber,
+        driverId: data.driverId,
         type: "order_delivered",
         status: "unread",
       });
@@ -167,6 +169,7 @@ export const handleEvent = async (event, data) => {
         title: "Order Pending",
         description: `Order ${data.orderNumber} failed: ${data.reason}`,
         orderId: data.orderNumber,
+        driverId: data.driverId,
         type: "order_failed",
         status: "unread",
       });

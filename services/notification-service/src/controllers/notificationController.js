@@ -1,12 +1,20 @@
 import Notification from "../model /Notification.js"
+import Driver from "../model /Driver.js"
 
 export const getAllNotifications = async (req, res) => {
   try {
-    const { driverId, role } = req.query
+    // `driverId` query param is actually the auth-service user id (user.id
+    // from the frontend) — resolve it to the order-service Driver._id that
+    // Notification.driverId is actually stored as.
+    const { driverId: userId, role } = req.query
     const filter = {}
 
-    if (role === 'driver' && driverId) {
-      filter.driverId = driverId
+    if (role === 'driver' && userId) {
+      const driver = await Driver.findOne({ userId })
+      if (!driver) {
+        return res.json({ success: true, data: { notifications: [] } })
+      }
+      filter.driverId = driver._id.toString()
     }
 
     // Admin and superadmin receive all notifications

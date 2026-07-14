@@ -3,32 +3,32 @@ import admin from "firebase-admin";
 
 let firebaseAdmin = null;
 
-const initFirebase =()=>{
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+const initFirebase = () => {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-    if(!projectId || !clientEmail || !privateKey){
-        logger.warn("Firebase credentials are not set. Push notifications will be disabled.");
-        return null;
-    }
+  if (!projectId || !clientEmail || !privateKey) {
+    logger.warn("Firebase credentials are not set. Push notifications will be disabled.");
+    return null;
+  }
 
-    try{
-       if(admin.apps.length === 0){
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId,
-                clientEmail,
-                privateKey: privateKey.replace(/\\n/g, "\n"),
-            }),
-        })
-       }
-       firebaseAdmin = admin;
-       logger.success('Firebase Admin initialized')
-    }catch(error){
-        logger.error("Error initializing Firebase Admin", error.message);
-        return null;
+  try {
+    if (admin.apps.length === 0) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey: privateKey.replace(/\\n/g, "\n"),
+        }),
+      })
     }
+    firebaseAdmin = admin;
+    logger.success('Firebase Admin initialized')
+  } catch (error) {
+    logger.error("Error initializing Firebase Admin", error.message);
+    return null;
+  }
 }
 
 // Send push notification to a single device
@@ -92,7 +92,7 @@ const sendNewOrderPush = async (fcmToken, data) => {
     '🛵 New order assigned!',
     `Pick up from ${data.warehouseName} → deliver to ${data.customerName}`,
     {
-      type:    'new_order',
+      type: 'new_order',
       orderId: data.orderId,
       orderNumber: data.orderNumber,
     }
@@ -106,10 +106,10 @@ const sendOrderCancelledPush = async (fcmToken, data) => {
     '❌ Order cancelled',
     `Order ${data.orderNumber} has been cancelled`,
     {
-      type:    'order_cancelled',
+      type: 'order_cancelled',
       orderId: data.orderId,
     }
   )
 }
 
-export {initFirebase, sendPushNotification, sendNewOrderPush, sendOrderCancelledPush };
+export { initFirebase, sendPushNotification, sendNewOrderPush, sendOrderCancelledPush };
