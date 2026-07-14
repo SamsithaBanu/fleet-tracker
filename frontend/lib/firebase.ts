@@ -97,11 +97,15 @@ export const setupForegroundNotifications = async () => {
       const title = payload.notification?.title || 'New Notification'
       const body  = payload.notification?.body  || ''
 
-      if (Notification.permission === 'granted') {
-        new Notification(title, {
-          body,
-          icon: '/favicon.ico',
-          tag: `fleet-notification-${Date.now()}`,
+      if (Notification.permission === 'granted' && navigator.serviceWorker) {
+        // The Notification() constructor is illegal on mobile Chrome —
+        // notifications must be shown via the service worker registration.
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.showNotification(title, {
+            body,
+            icon: '/favicon.ico',
+            tag: `fleet-notification-${Date.now()}`,
+          })
         })
       }
     })

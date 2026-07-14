@@ -47,7 +47,6 @@ export default function DriversPage() {
     email: "",
     licenseNumber: "",
     warehouseId: "",
-    userId: "temp-user-id", // replace with real auth userId later
   });
 
   useEffect(() => {
@@ -84,14 +83,23 @@ export default function DriversPage() {
     setError("");
 
     try {
-      const data = await driverApi.add(form);
-
       const registerData = await authApi.register({
         name: form?.name,
         email: form?.email,
         phone: form?.phone,
         password: "123456",
         role: "driver", // Default role
+      });
+
+      if (!registerData.success) {
+        toast.error(registerData.message || "Failed to create driver account");
+        setError(registerData.message || "Failed to create driver account");
+        return;
+      }
+
+      const data = await driverApi.add({
+        ...form,
+        userId: registerData.data.user.id,
       });
 
       if (data.success) {
@@ -109,7 +117,6 @@ export default function DriversPage() {
           email: "",
           licenseNumber: "",
           warehouseId: "",
-          userId: "temp-user-id",
         });
       } else {
         toast.error(data.message || "Failed to add driver");

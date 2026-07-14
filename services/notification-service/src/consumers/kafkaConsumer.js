@@ -1,4 +1,4 @@
-import { Kafka } from "kafkajs";
+import { Kafka, logLevel } from "kafkajs";
 import logger from "../utils/logger.js";
 
 import {
@@ -20,6 +20,11 @@ logger.info(`KAFKA_BROKER=${process.env.KAFKA_BROKER}`);
 const kafka = new Kafka({
   clientId: "notification-service",
   brokers: [process.env.KAFKA_BROKER || "localhost:9092"],
+  // Silence kafkajs's own internal connection-retry logging — order events
+  // are actually delivered via the HTTP /notifications/trigger fallback
+  // (see notifyService.js in order-service), so a broker being unreachable
+  // here is expected in environments without Kafka and isn't critical.
+  logLevel: logLevel.NOTHING,
 });
 
 // Create consumer with a consumer group ID
@@ -29,10 +34,14 @@ const consumer = kafka.consumer({
   groupId: "notification-group",
 });
 
+const MAX_CONNECT_ATTEMPTS = 3;
+let connectAttempts = 0;
+
 const startConsumer = async () => {
   try {
     await consumer.connect();
     logger.success("Kafka consumer connected");
+    connectAttempts = 0;
 
     // Subscribe to order events topic
     await consumer.subscribe({
@@ -60,7 +69,15 @@ const startConsumer = async () => {
       },
     });
   } catch (err) {
-    logger.error("Kafka consumer error:", err.message);
+    connectAttempts += 1;
+
+    if (connectAttempts >= MAX_CONNECT_ATTEMPTS) {
+      logger.warn(
+        `Kafka consumer unavailable after ${connectAttempts} attempts (${err.message}) — giving up. Order events are still delivered via the HTTP /notifications/trigger fallback.`
+      );
+      return;
+    }
+
     // Retry after 5 seconds
     setTimeout(startConsumer, 5000);
   }
