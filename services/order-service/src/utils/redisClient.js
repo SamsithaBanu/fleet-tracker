@@ -8,6 +8,7 @@ if (process.env.UPSTASH_REDIS_URL) {
   redis = new Redis(process.env.UPSTASH_REDIS_URL, {
     tls: { rejectUnauthorized: false },
     maxRetriesPerRequest: 3,
+    family: 4, // force IPv4 — fixes ENOTFOUND on Render
   })
 } else {
   // Local development
